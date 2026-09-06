@@ -48,6 +48,22 @@ experiments:
     output_files: [evaluation.csv, ccce_estimates.csv, baseline_metrics.csv, verdict.json, manifest.json, confirmation_manifest.yaml]
     status: "RUN, discovery (10 seeds/1800 steps) AND locked confirmation (30 fresh seeds/15000 steps, pre-registered, SHA-256 hash logged). Confirmation result: pattern_observed=False, but CCCE(c=2.0)=-0.0075 with bootstrap 95% CI [-0.0164,-0.0001] EXCLUDING ZERO -- statistically detectable but below the practical-significance threshold delta=0.03; Holm-corrected significance=False. See FINAL_EXPERIMENTAL_REPORT.md."
 
+  E03_HIDDEN_VULNERABILITY_SB3:
+    hypothesis: "Same as E03_HIDDEN_VULNERABILITY, tested with a real Stable-Baselines3 PPO backend instead of the NumPy substitute, at the same 30 seeds and training budget as E03's NumPy confirmation stage."
+    environment: level2_synthetic_pointmass_gym_wrapped
+    algorithm: "real_stable_baselines3_PPO (naive for L_T, EWC via direct policy-parameter manipulation for L_C)"
+    task_sequences: ["T1->T2->T3->T4->[T5 branch]"]
+    seeds: {confirmation: [1000..1029]}
+    interventions: [0.5, 0.75, 1.0, 1.5, 2.0]
+    controls: [EWC_lambda_300_distance_capped]
+    checkpoints: ["_checkpoint_seed<N>.json per seed (Section 6 checkpoint/resume, exercised after a real interruption)"]
+    metrics: [rc, ccce, bwt, update_magnitude]
+    statistical_test: bootstrap_2000
+    confidence_level: 0.95
+    multiple_testing: holm_across_4_intervention_comparisons
+    output_files: [ccce_estimates.csv, verdict.json, manifest.json, confirmation_manifest.yaml, "_checkpoint_seed<N>.json"]
+    status: "RUN -- 30 seeds, real Stable-Baselines3 backend (torch 2.14.0), ~46 minutes wall-clock across two launches (interrupted once by the sandbox, resumed via checkpoint). Result: CLEANER NULL than the NumPy version -- all 4 non-nominal intervention points have bootstrap 95% CI including zero (largest mean effect +0.0061 at c=0.5, wrong sign); nominal RC=-0.0106 with CI [-0.0182,-0.0030] EXCLUDING ZERO, weakly undermining the RC~0 precondition itself. No Holm-significant effect anywhere. Also revealed that this backend is NOT bit-reproducible given a fixed seed (see docs/DEVIATIONS.md #11) -- unlike every NumPy-backed experiment in this project."
+
   E04_INCREMENTAL_INFORMATION:
     hypothesis: "M1 = M0 + CCCE outperforms M0 (conventional-diagnostic proxies) at predicting an independently-generated future envelope-violation label, via 5-fold CV AUROC."
     environment: level1_analytical_scm_random_scenarios

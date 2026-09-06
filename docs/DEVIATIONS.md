@@ -263,11 +263,67 @@ E03's and E09's confirmation stages with real SB3 PPO, for instance,
 would take considerably longer than the NumPy versions given SAC's ~85
 steps/sec throughput observed here) was not undertaken this session.
 
+## 11. E03's SB3 confirmation stage: EWC penalty scale bug and non-determinism
+
+Following the SAC/torch reversal in Section 10, E03's hidden-vulnerability
+experiment was re-run at confirmation scale (30 seeds, same seeds and
+budget as the NumPy version) with a real SB3 PPO backend, to test whether
+the phenomenon (or lack thereof) holds with a genuine neural-network
+policy rather than the linear-Gaussian NumPy substitute.
+
+**Bug found and fixed before the full run**: the EWC penalty
+implementation (`ccce.learners.sb3_params.apply_ewc_penalty`) reused the
+`max_penalty_norm=5.0` constant calibrated for the NumPy policy's ~19
+parameters. Applied unmodified to a real SB3 policy network (~9,157
+parameters), this fixed clip was drastically larger than the actual
+parameter movement from a short training burst (observed: a burst moving
+the flat parameter vector by only ~0.17 in L2 norm), causing the
+"corrective" EWC step to overshoot straight through the anchor point and
+land *further* away (0.17 -> 4.83) instead of closer. Caught via a direct
+before/after distance check during manual testing, before committing to
+the 30-seed run. Fixed by capping the penalty step at
+`min(max_penalty_norm, 0.5 * current_anchor_distance)`, which cannot
+overshoot the anchor regardless of the parameter space's scale. Verified
+with 5 new unit tests (`tests/test_sb3_params.py`) at both small and
+large gap sizes.
+
+**Non-determinism finding**: unlike the from-scratch NumPy implementation
+(engineered and verified to be exactly bit-reproducible given a fixed
+seed -- see Section 6 above), the real SB3/PyTorch backend is **not**
+bit-reproducible on this hardware even with an identical declared seed. A
+standalone test of seed 1000 produced `RC=-0.0214`; the same seed
+processed as the first entry in the full 30-seed run produced
+`RC=+0.0277`. This is very likely caused by non-deterministic
+floating-point summation order in multi-threaded CPU BLAS operations,
+a general, well-documented limitation of deep-learning reproducibility
+(not specific to this project's code). This is disclosed explicitly:
+**results from E08 and E03's SB3 confirmation run are not individually
+re-derivable on demand** the way every NumPy-backed result in this
+project is, even though the experiments themselves are re-runnable and
+would produce statistically similar results.
+
+**Result**: the real-SB3 confirmation stage found a *cleaner null* than
+the NumPy version -- every one of the 4 non-nominal intervention points
+had a 95% CI including zero (versus the NumPy version's one
+CI-excluding-zero-but-subthreshold point at c=2.0), while the nominal RC
+itself showed a detectable (CI excluding zero) effect, weakly undermining
+the "RC~0" precondition. See `FINAL_EXPERIMENTAL_REPORT.md`'s Hidden
+Vulnerability section for the full comparison across all three Level-2
+results now available (NumPy discovery, NumPy confirmation, SB3
+confirmation).
+
+**Scope note**: only E03's hidden-vulnerability experiment and E08 were
+upgraded to the real SB3 backend. E01, E02, E04-E07, E09, E10, E11 still
+use the NumPy substitute; upgrading E09's full 5-baseline, 30-seed
+confirmation stage to real SB3 was estimated at ~100 minutes of
+additional wall-clock compute and was not undertaken in this session.
+
 ## Summary table
 
 | Component | Spec'd | Actual | Reason |
 |---|---|---|---|
-| PPO backend | Stable-Baselines3 | From-scratch NumPy (E01-E07,E09-E11) + **real SB3 (E08 only)** | Torch became installable later in the project (Section 10); not retrofitted to every experiment |
+| PPO backend | Stable-Baselines3 | From-scratch NumPy (E01,E02,E04-E07,E09-E11) + **real SB3 (E08, E03's second confirmation run)** | Torch became installable later in the project (Section 10); not retrofitted to every experiment |
+| Bit-reproducibility | Deterministic given seed | **NumPy experiments: yes, verified.** **SB3 experiments (E08, E03-SB3): NO** -- same seed gives different results across runs | Multi-threaded CPU BLAS non-determinism in PyTorch (Section 11); a general deep-learning limitation, not specific to this code |
 | SAC | Required | **RUN (E08, real SB3)** | Torch/SB3 became installable (Section 10) |
 | MuJoCo benchmarks | Required | Smoke-tested only (HalfCheetah-v5, Hopper-v5 reset/step confirmed); no full experiment run | Time constraints, not a technical blocker anymore |
 | Level-2 seeds | 10 dev / 30-50 confirm | **10 dev / 30 confirm** | **Fully compliant with the 30-seed tier** |

@@ -83,15 +83,22 @@ NOT_RUN.
 
 - **PPO**: primarily a from-scratch NumPy implementation (documented
   substitute for Stable-Baselines3; see Deviations #2), used for
-  E01/E03/E04/E05/E06/E07/E09/E10/E11. **E08 uses real Stable-Baselines3
-  PPO** (see below and Deviations #10). Both are verified deterministic
-  given a fixed seed.
+  E01/E04/E05/E06/E07/E09/E10/E11 and E03's original confirmation stage.
+  **E08 and a second, real-backend confirmation run of E03 use real
+  Stable-Baselines3 PPO** (see below and Deviations #10). The NumPy
+  substitute is verified exactly bit-reproducible given a fixed seed; the
+  real SB3 backend is **not** -- see Reproducibility below.
 - **SAC**: **RUN (E08 only)**, using real Stable-Baselines3, after
   PyTorch became installable in this sandbox in a later session --
   reversing a constraint independently confirmed impossible twice earlier
   (standard PyPI install failing from disk exhaustion; the official
   CPU-only wheel index being outside this sandbox's network egress
   allowlist). See Deviations #10 for the complete, transparent account.
+- **E03's hidden-vulnerability experiment was run a second time with the
+  real SB3 backend** (30 seeds, same seed values and training budget as
+  the NumPy confirmation stage, for the closest possible comparison) --
+  see Hidden Vulnerability below for the result, which differs
+  qualitatively from the NumPy version.
 
 ## Baselines
 
@@ -169,14 +176,60 @@ either direction (e.g., seed 1003: -0.0933, seed 1007: -0.0668, seed
 1006: +0.0625), consistent with the seed-instability pattern documented
 below (Continual-Learning Baselines).
 
+**Confirmation stage, REAL Stable-Baselines3 backend** (same 30 seeds
+1000-1029, same 15,000-step/task budget, locked pre-registration,
+manifest SHA-256 `6f587d58...`; see Learning Algorithms and Deviations
+#10 for how this backend became available): the result is a **cleaner
+null than the NumPy version, in a specific and informative way**. Mean
+nominal RC = -0.0106, 95% CI [-0.0182, -0.0030] -- this CI **excludes
+zero**, meaning real neural-network training shows a small but
+statistically detectable retention change even with no intervention at
+all, which is a *weaker* fit to the "RC~0" precondition than either the
+discovery stage or the NumPy confirmation stage showed. More strikingly,
+**every one of the 4 non-nominal intervention points has a CCCE 95%
+bootstrap CI that includes zero** (largest-magnitude mean effect: +0.0061
+at `c=0.5`, CI [-0.0051, 0.0164] -- wrong sign and not significant). No
+Holm-significant effect anywhere. Where the NumPy confirmation stage
+found one statistically-detectable-but-below-threshold effect at `c=2.0`,
+the real-SB3 confirmation stage finds no statistically detectable effect
+at any tested intervention, while additionally finding a detectable
+nominal RC that arguably undermines the "RC~0" half of the hypothesis
+under test. **This is reported as a real, informative negative result
+using the actual deep-RL backend specified by the manuscript, not
+softened or reframed.**
+
+A separate, important methodological finding from this SB3 run: **the
+same declared seed did not reproduce identical results across two
+separate invocations** (a standalone single-seed test of seed 1000 gave
+RC=-0.0214, while the actual full run's first seed=1000 gave RC=+0.0277).
+This is very likely due to non-deterministic floating-point summation
+order in multi-threaded CPU BLAS operations underlying PyTorch's tensor
+operations -- a well-known, general limitation of deep-learning
+reproducibility that is fundamentally different from the NumPy substitute
+used elsewhere in this project, which was engineered and verified to be
+exactly bit-reproducible (see Reproducibility section). **This means the
+30 real-SB3 seeds used here, while independently and validly sampled, are
+not individually re-derivable on demand the way every other number in
+this report is** -- re-running this specific script will produce a
+statistically similar but not numerically identical set of 30 results.
+This is disclosed here rather than silently accepted as equivalent to the
+rest of this project's reproducibility standard.
+
 **At Level 1**, the same qualitative phenomenon (RC~0, CCCE(c*) strongly
 negative under a valid intervention) is exactly constructible by design
 and correctly recovered by the estimator (sign accuracy 1.00, Ground
-Truth table above). The Level-2 confirmation result -- a small,
-correctly-signed, statistically-detectable-but-below-threshold effect --
-sits between "phenomenon cleanly absent" and "phenomenon cleanly present
-at the pre-registered scale," and is reported as exactly that rather than
-forced into either category.
+Truth table above). Taken together, the three Level-2 results now
+available -- NumPy discovery, NumPy confirmation, and real-SB3
+confirmation -- form a spectrum from "weak, correctly-signed hint" to
+"one detectable-but-subthreshold effect" to "no detectable effect
+anywhere, with a confound in the RC~0 precondition itself." **The
+real-SB3 result is the one that should be weighted most heavily**, since
+it uses the actual specified deep-RL backend rather than a substitute,
+and it points toward the hidden-vulnerability phenomenon not being
+supported at this training budget with a real neural-network policy --
+while still leaving open whether a larger budget (this run used
+15,000 steps/task, still ~130x below main_v2.tex's 2e6-step
+specification) would change this conclusion.
 
 ## Incremental Information
 
@@ -372,39 +425,62 @@ remains unimplemented; the timings above were measured manually.
 
 ## Reproducibility
 
-- 57/57 unit and integration tests pass (`PYTHONPATH=src pytest tests/ -q`),
-  including 3 new tests added this session for the pre-registration lock
-  mechanism (`tests/test_preregistration.py`).
-- Every experiment script is deterministic given its fixed seed(s) and
-  produces its declared CSV/JSON outputs when re-run
-  (`test_training_is_deterministic_given_same_seed`,
+- 62/62 unit and integration tests pass (`PYTHONPATH=src pytest tests/ -q`),
+  including 3 tests for the pre-registration lock mechanism
+  (`tests/test_preregistration.py`) and 5 new tests for the SB3
+  parameter-manipulation utilities and EWC-penalty scale-invariance
+  (`tests/test_sb3_params.py`), added when a real bug was found and fixed
+  in that penalty's distance-clipping logic (see Deviations #11).
+- **Every experiment using the from-scratch NumPy backend** (E01, E02,
+  E03's original NumPy confirmation stage, E04-E07, E09-E11) **is
+  deterministic given its fixed seed(s)** and produces its declared
+  CSV/JSON outputs when re-run (`test_training_is_deterministic_given_same_seed`,
   `test_rng_bundle_reproducible_from_same_seed`, and the checkpoint
   round-trip test verify the underlying mechanisms directly). This was
   re-verified after this session's changes by diffing full stdout across
   repeated clean invocations of E01, E03 (discovery), and E09 (discovery).
+- **Experiments using the real Stable-Baselines3 backend (E08, and E03's
+  second confirmation run) are NOT bit-reproducible**, even given an
+  identical declared seed: a standalone single-seed test of seed 1000
+  produced RC=-0.0214, while the same seed processed inside the full
+  30-seed run produced RC=+0.0277. This is very likely caused by
+  non-deterministic floating-point summation order in multi-threaded CPU
+  BLAS operations underlying PyTorch, a general and well-known limitation
+  of deep-learning reproducibility. This is disclosed explicitly rather
+  than silently assumed away: **the specific 30 numbers reported for the
+  SB3 confirmation stage are not individually re-derivable on demand**,
+  though the experiment as a whole (same code, same design, similar
+  seeds) is re-runnable and would be expected to produce statistically
+  similar, not numerically identical, results.
 - Every experiment's `manifest.json` records git commit, package
   versions (including explicit `NOT_INSTALLED_SANDBOX_CONSTRAINT` for
-  torch/gymnasium/stable_baselines3/mujoco), hardware, and a
+  torch/gymnasium/stable_baselines3/mujoco where applicable, or the
+  actual installed version once it became available), hardware, and a
   hyperparameter hash.
 - **Locked `confirmation_manifest.yaml` pre-registration files (Section
-  57) are now generated and SHA-256 hashed for both E03 and E09 before
-  their confirmation-stage results are computed**, closing the gap noted
-  in the previous version of this report. The hash is carried through to
-  each experiment's `verdict.json`/`summary.json`. This mechanism does
-  not (and cannot, in a single-process script) cryptographically prevent
-  a determined author from editing the file before "unlocking" it -- it
-  provides an auditable paper trail, which is what Section 57 asks for.
-- **Genuine checkpoint/resume support was added to `E09_baselines/run.py`**
-  after an actual interruption during this session's confirmation-stage
-  run (a background process was killed by the execution sandbox partway
-  through, independent of any code bug). Each baseline's full 30-seed
-  sweep is checkpointed to `_checkpoint_<baseline>.csv` immediately on
-  completion; a restarted run detects and skips already-completed
-  baselines. This is a real, exercised instance of Section 6's
-  checkpointing requirement -- verified by the actual restart-and-resume
-  that occurred during this session, not merely implemented and left
-  untested. This checkpoint/resume pattern has not yet been generalized
-  to E03 or the other experiment scripts.
+  57) are now generated and SHA-256 hashed for E03 (both NumPy and SB3
+  versions), E09, and E08 before their results are computed**, closing
+  the gap noted in an earlier version of this report. The hash is carried
+  through to each experiment's `verdict.json`/`summary.json`. This
+  mechanism does not (and cannot, in a single-process script)
+  cryptographically prevent a determined author from editing the file
+  before "unlocking" it -- it provides an auditable paper trail, which is
+  what Section 57 asks for.
+- **Genuine checkpoint/resume support was added to `E09_baselines/run.py`
+  and `E03_hidden_vulnerability_sb3/run.py`**, both after actual
+  interruptions during this session's long-running confirmation-stage
+  runs (background processes killed by the execution sandbox partway
+  through, independent of any code bug -- this happened once for E09 and
+  once for E03's SB3 run). `E09_baselines/run.py` checkpoints each
+  baseline's full 30-seed sweep to `_checkpoint_<baseline>.csv`;
+  `E03_hidden_vulnerability_sb3/run.py` checkpoints each individual
+  seed's result to `_checkpoint_seed<N>.json`. Both were verified working
+  by actual restart-and-resume events during this session (E09's restart
+  printed `RESUMED from checkpoint` for 3 baselines and continued from
+  the 4th; E03's SB3 restart resumed instantly from 18 completed seeds
+  and continued to seed 19), not merely implemented and left untested.
+  This checkpoint/resume pattern has not yet been generalized to E01,
+  E02, E04-E08, E10, or E11.
 
 ## Scientific Verdict
 

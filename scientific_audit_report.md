@@ -10,6 +10,7 @@ Per Master Prompt V3 Section 67.
 | E01_GT_RECOVERY | RUN (discovery + confirmation) | Compliant: 10 dev / 30 confirm seeds |
 | E02_IDENTIFICATION | RUN | 200-case randomized battery + 6 hand cases |
 | E03_HIDDEN_VULNERABILITY | RUN (discovery + **locked confirmation**) | Discovery: 10 seeds/1800 steps; Confirmation: **30 fresh seeds/15,000 steps, pre-registered** |
+| E03_HIDDEN_VULNERABILITY_SB3 | **RUN (real Stable-Baselines3, not NumPy)** | 30 seeds (same as NumPy confirmation), ~46 min wall-clock, checkpointed |
 | E04_INCREMENTAL_INFORMATION | RUN | 400 synthetic scenarios |
 | E05_INFORMATION_MATCHED | RUN | (shares E04's dataset) |
 | E06_CONTRAST_ROBUSTNESS | RUN | Exact computation, 1 scenario x 3 controls x 5 c-values |
@@ -141,6 +142,29 @@ vacuously.
    and manually restarted, printed `RESUMED from checkpoint` for the
    already-completed baselines and correctly continued from EWC onward
    without recomputing naive/replay.
+10. **EWC penalty overshoot at real-neural-network parameter scale**
+    (`src/ccce/learners/sb3_params.py`, discovered while preparing E03's
+    SB3 confirmation run): the penalty formula's fixed
+    `max_penalty_norm=5.0` clip, calibrated for the ~19-parameter NumPy
+    policy, was drastically oversized for a real ~9,157-parameter SB3
+    neural network, causing the "corrective" step to overshoot the
+    anchor point and land *further* away (observed: distance 0.166 ->
+    4.83 after one uncorrected penalty application). Caught by a direct
+    before/after distance check during manual testing, before committing
+    to the 30-seed confirmation run. Fixed by capping the step at
+    `min(max_penalty_norm, 0.5 * current_anchor_distance)`, verified with
+    5 new unit tests (`tests/test_sb3_params.py`) at both small and large
+    gap sizes.
+11. **Real SB3/PyTorch backend is not bit-reproducible on this hardware**,
+    unlike the NumPy substitute: a standalone test of seed 1000 produced
+    `RC=-0.0214`, while the same seed processed as the first entry of the
+    full 30-seed run produced `RC=+0.0277`. Root cause is very likely
+    non-deterministic floating-point summation order in multi-threaded
+    CPU BLAS operations underlying PyTorch -- a general limitation of
+    deep-learning reproducibility, not a defect in this project's code.
+    Disclosed explicitly in `FINAL_EXPERIMENTAL_REPORT.md`'s
+    Reproducibility section rather than silently assumed equivalent to
+    the NumPy-backed experiments' exact reproducibility.
 
 ## 5. Pre-registration and confirmation-stage upgrades added this session
 
@@ -231,6 +255,21 @@ standard. Individual-seed variance was substantial (several confirmation
 seeds showed |CCCE| > 0.06 at `c=2.0` in either direction -- e.g., seed
 1003: -0.0933, seed 1007: -0.0668, seed 1006: +0.0625 not shown above),
 consistent with the seed-instability pattern also observed in E09.
+
+**Confirmation stage, REAL Stable-Baselines3 backend (30 seeds
+1000-1029, same seeds/budget as above, SHA-256 hash `6f587d58...`)**:
+`pattern_observed: False`, and **cleaner** than the NumPy confirmation
+stage. Mean nominal RC = -0.0106, 95% CI [-0.0182, -0.0030] -- this CI
+**excludes zero**, i.e. real neural-network training shows a small but
+statistically detectable retention change even absent any intervention,
+which is a *weaker* fit to "RC~0" than the NumPy runs. All 4 non-nominal
+intervention points have CCCE 95% CI **including zero** (largest mean
+effect: +0.0061 at `c=0.5`, wrong sign, not significant). No
+Holm-significant effect anywhere. Where the NumPy confirmation stage
+found one statistically-detectable-but-subthreshold effect, the
+real-SB3 run finds none, while also showing a confound in the RC~0
+precondition itself. This result should be weighted more heavily than
+the NumPy versions, since it uses the actual specified deep-RL backend.
 
 Separately, at Level 1 (the pure analytical SCM, where effect sizes are
 directly parameterized rather than emergent from RL training), the
