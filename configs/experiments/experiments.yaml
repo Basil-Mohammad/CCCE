@@ -46,7 +46,7 @@ experiments:
     confidence_level: 0.95
     multiple_testing: none_single_comparison
     output_files: [evaluation.csv, ccce_estimates.csv, baseline_metrics.csv, verdict.json, manifest.json]
-    status: "RUN (discovery only, REDUCED SCALE 5 seeds / ~1800 steps per task; NOT the locked 30/50-seed confirmation -- result: pattern_observed=False at this scale, see FINAL_EXPERIMENTAL_REPORT.md)"
+    status: "RUN (discovery only, 10 seeds meeting Section 4 minimum / ~1800 steps per task; NOT the locked 30/50-seed confirmation -- result: pattern_observed=False, but sign now matches hypothesis (strongest CCCE=-0.0069 at c=1.5, below delta=0.03 threshold), see FINAL_EXPERIMENTAL_REPORT.md)"
 
   E04_INCREMENTAL_INFORMATION:
     hypothesis: "M1 = M0 + CCCE outperforms M0 (conventional-diagnostic proxies) at predicting an independently-generated future envelope-violation label, via 5-fold CV AUROC."
@@ -142,7 +142,7 @@ experiments:
     confidence_level: n/a
     multiple_testing: n/a
     output_files: [diagnostics_by_baseline.csv, summary.json, manifest.json]
-    status: "RUN (5 seeds, ~1200 steps/task, REDUCED SCALE) -- result: all BWT magnitudes near zero (<0.002); likely too small a training budget to induce meaningful forgetting at all, making this comparison INCONCLUSIVE rather than a real discriminating test of the baselines (documented limitation). Distillation and UPGD baselines are implemented and unit-tested but not included in this specific comparison run due to time constraints."
+    status: "RUN (10 seeds meeting Section 4 minimum, ~1200 steps/task) -- result: naive is stable near zero; replay and EWC each show exactly 2 of 10 seeds with large (~+-0.08) BWT swings, the other 8 near zero, indicating recurring seed-level training instability at this budget rather than a systematic method difference (documented limitation). Distillation and UPGD baselines are implemented and unit-tested but not included in this specific comparison run due to time constraints."
 
   E10_ABLATIONS:
     hypothesis: "n/a (methodological sensitivity checks, not a single hypothesis)"

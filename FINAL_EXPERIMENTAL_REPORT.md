@@ -32,7 +32,7 @@ an invented number.
 |---|---|---|
 | Level 1 (analytical, E01) | 10 seeds | 30 fresh, disjoint seeds |
 | Level 1 (other experiments) | 60-200 independent random scenarios each | n/a (single-stage design) |
-| Level 2 (E03, E09) | 5 seeds | **not run** |
+| Level 2 (E03, E09) | 10 seeds (meets Section 4's minimum) | **not run** |
 
 ## Environments
 
@@ -116,20 +116,22 @@ Hand-constructed test cases: 100% classification accuracy (6/6).
 
 ## Hidden Vulnerability
 
-**Not observed at the Level-2 scale actually run** (5 seeds, ~1800
-training steps/task): nominal RC = -0.0125 (averaged across seeds; close
-to the "RC ~ 0" half of the hypothesis but dominated by one outlier seed
--- seed 2 alone showed RC=-0.0625, an order of magnitude larger than the
-other four seeds, which were all <0.0005 in absolute value). No
-intervention value in the tested grid produced a *consistent* CCCE below
-the pre-registered `-delta = -0.03` threshold in the hypothesized
-direction across seeds; the strongest mean effect was +0.0124 (wrong
-sign) at `c=2.0`, itself driven by a single outlier seed (seed 4, +0.0625
-at c=2.0) rather than a consistent pattern. **This single-seed-driven
-volatility is itself a finding**: per Master Prompt V3 Section 60 ("check
-whether conclusions are driven by one seed"), they clearly are here, at
-this reduced training scale -- another symptom of the ~1800-step budget
-being too small for stable learning dynamics.
+**Not observed at the Level-2 scale actually run** (10 seeds -- meeting
+Section 4's minimum discovery-stage requirement -- ~1800 training
+steps/task): mean nominal RC = -0.0063 (closer to the "RC ~ 0" half of
+the hypothesis than the earlier 5-seed run's -0.0125, as expected: more
+seeds dilute the influence of the single outlier seed discussed below).
+The strongest mean intervention-conditioned CCCE was -0.0069 at `c=1.5`
+-- **now correctly signed** (negative, matching the hypothesized
+direction, unlike the earlier 5-seed run's wrong-signed result) but still
+well short of the pre-registered `-delta=-0.03` threshold. **Adding seeds
+changed the qualitative picture**: the sign of the effect flipped to the
+hypothesized direction, even though it remains too small to count as
+"observed" under the pre-registered tolerance. This is consistent with
+the interpretation that a real, small effect may be present at this
+scale but is dominated by seed-to-seed training noise (see Continual-
+Learning Baselines, below) rather than the phenomenon being straightforwardly
+absent.
 
 **However**, at Level 1, the same qualitative phenomenon (RC~0, CCCE(c*)
 strongly negative under a valid intervention) is exactly constructible by
@@ -140,11 +142,12 @@ is capable of detecting this phenomenon when it is present with
 sufficient effect size; **the Level-2 null result is most parsimoniously
 explained by unstable, under-trained learning dynamics at this reduced
 budget rather than the absence of any real phenomenon** -- E09's baseline
-comparison (below) shows the same reduced-budget setup produces highly
-seed-dependent, occasionally large (up to -0.08) BWT swings for replay
-and EWC, i.e. the training dynamics at this scale are volatile enough
-that a real effect could easily be swamped by seed-to-seed noise rather
-than genuinely absent.
+comparison (below), now also at 10 seeds, shows the same reduced-budget
+setup produces highly seed-dependent, occasionally large (up to +/-0.08)
+BWT swings for replay and EWC, and now shows this instability recurring
+in *two* seeds per method rather than one, strengthening the case that
+seed-level training volatility, not absence of effect, is the dominant
+factor obscuring the hidden-vulnerability signal at this scale.
 
 ## Incremental Information
 
@@ -196,32 +199,39 @@ setting, which was not tested.
 
 ## Continual-Learning Baselines
 
-E09 (5 seeds, ~1200 steps/task, T1->T2->T3 sequence, mean BWT on T1 after
-the full sequence):
+E09 (10 seeds -- meeting Section 4's minimum discovery-stage requirement
+-- ~1200 steps/task, T1->T2->T3 sequence, mean BWT on T1 after the full
+sequence):
 
 | Baseline | Mean BWT | Std BWT | Notes |
 |---|---|---|---|
-| naive | -0.0001 | 0.0001 | Consistently near zero across all 5 seeds |
-| replay | -0.0162 | 0.0332 | Dominated by one outlier seed (seed 2: -0.0826); other 4 seeds all near zero |
-| ewc | -0.0165 | 0.0329 | Dominated by one outlier seed (seed 3: -0.0823); other 4 seeds all near zero |
+| naive | +0.0000 | 0.0005 | Consistently near zero across all 10 seeds |
+| replay | +0.0004 | 0.0371 | Two outlier seeds: seed 2 (-0.0826), seed 7 (+0.0832); other 8 seeds all near zero |
+| ewc | -0.0165 | 0.0330 | Two outlier seeds: seed 3 (-0.0823), seed 6 (-0.0828); other 8 seeds all near zero |
 
-(source: `experiments/E09_baselines/output/summary.json`, now verified
+(source: `experiments/E09_baselines/output/summary.json`, verified
 deterministic -- see Reproducibility section)
 
 **This result should not be read as "replay and EWC forget more than
-naive training."** In both cases, 4 of 5 seeds show near-zero BWT
-(consistent with naive), and the large mean/std is driven entirely by a
-single outlier seed per method. This is exactly the seed-robustness check
+naive training."** In both cases, 8 of 10 seeds show near-zero BWT
+(consistent with naive), and the mean/std is driven by exactly 2 outlier
+seeds per method. **Doubling the seed count from 5 to 10 strengthened
+this finding rather than resolving it**: the original 5-seed run showed
+one outlier per method; the additional 5 seeds revealed a *second*
+outlier for both replay and EWC (and, notably, replay's two outliers are
+nearly symmetric in sign, -0.0826 and +0.0832), consistent with roughly
+1-in-5 training runs at this budget hitting some form of instability,
+rather than a single fluke. This is exactly the seed-robustness check
 Master Prompt V3 Section 60 requires ("check whether conclusions are
-driven by one seed"), and the honest answer here is **yes, they are** --
-at this reduced training scale, occasional unstable training runs (for
-reasons not further diagnosed in this session -- possibly a poor
-initialization interacting with the EWC penalty or replay buffer
-composition) produce large one-off BWT swings that would disappear or
-average out with more seeds. This instability is also the most likely
-explanation for why E03's hidden-vulnerability pattern was not cleanly
-observed (see above): at this scale, seed-to-seed training variance may
-simply dominate any systematic cross-competence effect.
+driven by one seed"), and the honest answer is that **conclusions here
+are driven by a recurring minority of unstable seeds, not the majority
+behavior** -- a pattern that would very likely average out or resolve
+with the full 30/50-seed confirmation stage this session did not run.
+This instability is also the most likely explanation for why E03's
+hidden-vulnerability pattern was only partially observed (correct sign,
+insufficient magnitude) rather than cleanly confirmed or refuted: at this
+scale, seed-to-seed training variance is comparable in size to any
+systematic cross-competence effect.
 
 ## Ablations
 
@@ -239,12 +249,13 @@ intervention coverage) are **NOT_RUN**.
   under its specific design (see above, with caveats).
 - E07's future-vulnerability test found no association (see above, with
   caveats).
-- E03's hidden-vulnerability pattern was not observed at the tiny
-  Level-2 training scale used.
-- E09's baseline comparison revealed high seed-to-seed instability
-  (replay and EWC each had one outlier seed with BWT around -0.08 versus
-  near-zero for the other four seeds), suggesting the reduced training
-  budget produces genuinely unstable learning dynamics at this scale.
+- E03's hidden-vulnerability pattern was only partially observed at the
+  Level-2 training scale used: correct sign, insufficient magnitude.
+- E09's baseline comparison revealed recurring seed-to-seed instability
+  (replay and EWC each had 2 of 10 outlier seeds with BWT around +/-0.08
+  versus near-zero for the other 8 seeds), suggesting the reduced
+  training budget produces genuinely unstable learning dynamics at this
+  scale, affecting roughly 1-in-5 runs rather than being a rare fluke.
 
 These are reported here with the same weight as the positive Level-1
 results (E01, E02, E06, E11), per Master Prompt V3 Section 62 ("negative

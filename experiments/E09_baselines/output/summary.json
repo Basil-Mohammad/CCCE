@@ -1,20 +1,20 @@
 {
   "summary_by_baseline": {
     "naive": {
-      "mean_bwt": -0.00010216948551078353,
-      "std_bwt": 0.00011567564381579829,
-      "n_seeds": 5
+      "mean_bwt": 8.482259185838003e-06,
+      "std_bwt": 0.0004763793526559077,
+      "n_seeds": 10
     },
     "replay": {
-      "mean_bwt": -0.01622144602533009,
-      "std_bwt": 0.03317261583999347,
-      "n_seeds": 5
+      "mean_bwt": 0.0003735343197705632,
+      "std_bwt": 0.03707749737303018,
+      "n_seeds": 10
     },
     "ewc": {
-      "mean_bwt": -0.016508870100583106,
-      "std_bwt": 0.03289062078724006,
-      "n_seeds": 5
+      "mean_bwt": -0.016532807114343084,
+      "std_bwt": 0.033009859675392425,
+      "n_seeds": 10
     }
   },
-  "caveat": "REDUCED SCALE (5 seeds, ~1200 steps/task). Distillation and UPGD baselines are implemented and unit-tested but not run in this comparison due to sandbox compute-time constraints."
+  "caveat": "10 seeds (meets Section 4's minimum), ~1200 steps/task. Distillation and UPGD baselines are implemented and unit-tested but not run in this comparison due to sandbox compute-time constraints."
 }

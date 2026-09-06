@@ -74,12 +74,13 @@ claims).
 - **E01 (Level 1, analytical)**: fully compliant. Discovery used 10
   seeds, confirmation used 30 fresh, disjoint seeds (seeds 1000-1029 vs.
   0-9), as specified.
-- **E03, E09 (Level 2, synthetic env)**: discovery-stage only, with
-  **5 seeds**, not 10. No locked 30/50-seed confirmation stage was run
-  for Level 2 at all. This is a direct consequence of wall-clock time
-  available in this session, not a scientific judgment that 5 seeds
-  suffice -- it explicitly does not, and no claim in
-  `FINAL_EXPERIMENTAL_REPORT.md` treats the Level-2 results as
+- **E03, E09 (Level 2, synthetic env)**: **updated to 10 seeds** (was
+  originally 5 in the first implementation pass; increased to meet
+  Section 4's stated minimum, `N_dev >= 10`, on 2026-09-06). Discovery
+  stage only -- **no locked 30/50-seed confirmation stage was run for
+  Level 2 at all**, which remains a real gap. 10 seeds is the specified
+  floor for discovery, not for a confirmatory claim, and no statement in
+  `FINAL_EXPERIMENTAL_REPORT.md` treats these Level-2 results as
   confirmatory.
 - **E02, E06, E07, E11 (Level 1, various)**: use single fixed seeds or
   seed batteries (60-200 independent random scenarios) appropriate to
@@ -152,6 +153,6 @@ entirely. The re-derivation is documented in
 | PPO backend | Stable-Baselines3 | From-scratch NumPy | No PyTorch (disk) |
 | SAC | Required | NOT_RUN | No PyTorch (disk) |
 | MuJoCo benchmarks | Required | NOT_RUN | No PyTorch/mujoco (disk) |
-| Level-2 seeds | 10 dev / 30-50 confirm | 5 dev / 0 confirm | Wall-clock time |
+| Level-2 seeds | 10 dev / 30-50 confirm | **10 dev** / 0 confirm | Dev now compliant; confirmation stage not run (wall-clock time) |
 | Training budget | 2e6 steps | 1.2-1.8k steps | Wall-clock time (1 CPU) |
 | Level-1 seeds | 10 dev / 30-50 confirm | 10 dev / 30 confirm | **Fully compliant** |

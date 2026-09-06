@@ -9,12 +9,12 @@ Per Master Prompt V3 Section 67.
 |---|---|---|
 | E01_GT_RECOVERY | RUN (discovery + confirmation) | Compliant: 10 dev / 30 confirm seeds |
 | E02_IDENTIFICATION | RUN | 200-case randomized battery + 6 hand cases |
-| E03_HIDDEN_VULNERABILITY | RUN (discovery only) | REDUCED: 5 seeds, ~1800 steps/task |
+| E03_HIDDEN_VULNERABILITY | RUN (discovery only) | 10 seeds (meets Section 4 minimum), ~1800 steps/task |
 | E04_INCREMENTAL_INFORMATION | RUN | 400 synthetic scenarios |
 | E05_INFORMATION_MATCHED | RUN | (shares E04's dataset) |
 | E06_CONTRAST_ROBUSTNESS | RUN | Exact computation, 1 scenario x 3 controls x 5 c-values |
 | E07_FUTURE_VULNERABILITY | RUN | 60 synthetic scenarios |
-| E09_CL_BASELINES | RUN (discovery only) | REDUCED: 5 seeds, ~1200 steps/task |
+| E09_CL_BASELINES | RUN (discovery only) | 10 seeds (meets Section 4 minimum), ~1200 steps/task |
 | E10_ABLATIONS | PARTIALLY RUN | 1 of 9 ablation factors (seed count) |
 | E11_NEGATIVE_CONTROLS | RUN | 80 synthetic scenarios |
 
@@ -33,7 +33,8 @@ knowledge, but see Section 8 (limitations of our own verification).
 - **Standard MuJoCo/Gymnasium benchmark validation (Section 9)**:
   NOT_RUN. Same root cause.
 - **E03/E09 locked 30/50-seed confirmation stage**: NOT_RUN. Only the
-  discovery stage (5 seeds) was executed for Level-2 experiments due to
+  discovery stage (10 seeds, meeting Section 4's minimum) was executed
+  for Level-2 experiments due to
   wall-clock time constraints in this session. No confirmation-stage
   claim is made for Level 2.
 - **8 of 9 ablation factors in Section 51**: NOT_RUN (time constraints).

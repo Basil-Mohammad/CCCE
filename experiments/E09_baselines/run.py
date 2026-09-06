@@ -4,7 +4,7 @@ E09_CL_BASELINES -- Master Prompt V3 Section 14, reduced scale.
 Compares naive sequential PPO, replay, and EWC (the three baselines with
 the most mature implementations in this codebase) on the T1->T2->T3
 sequence, reporting BWT on T1 after training through T3 for each method.
-REDUCED SCALE: 5 seeds, ~1200 steps/task (see docs/DEVIATIONS.md).
+REDUCED SCALE: 10 seeds (meets Section 4's minimum), ~1200 steps/task (see docs/DEVIATIONS.md).
 Distillation and UPGD are implemented in
 src/ccce/baselines/continual_methods.py and unit-tested, but are not
 included in this particular comparison run due to compute-time
@@ -29,7 +29,7 @@ from ccce.utils.provenance import build_manifest
 EXPERIMENT_ID = "E09_CL_BASELINES"
 TASKS = default_task_set()
 SEQUENCE = ["T1", "T2", "T3"]
-SEEDS = list(range(5))
+SEEDS = list(range(10))  # N_dev = 10, matching Section 4's minimum
 HP = PPOHyperparameters(total_env_steps=1200, rollout_length=60, n_epochs=3, learning_rate=0.04)
 
 
@@ -107,7 +107,7 @@ def run(output_dir: Path) -> None:
     with open(output_dir / "summary.json", "w") as f:
         json.dump(dict(
             summary_by_baseline=summary,
-            caveat="REDUCED SCALE (5 seeds, ~1200 steps/task). Distillation and UPGD "
+            caveat="10 seeds (meets Section 4's minimum), ~1200 steps/task. Distillation and UPGD "
                    "baselines are implemented and unit-tested but not run in this "
                    "comparison due to sandbox compute-time constraints.",
         ), f, indent=2)
