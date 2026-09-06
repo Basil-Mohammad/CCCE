@@ -1,0 +1,13 @@
+# Pre-registered competence envelope thresholds (Master Prompt V3, Section 17).
+# See docs/DEVIATIONS.md #9 for why these are lower than main_v2.tex Table 13's
+# full-budget targets: this envelope is calibrated for the reduced-capacity,
+# reduced-budget NumPy-PPO substitute used in this sandbox, not for a
+# production-scale learner.
+success_min: 0.3
+safety_max: 0.5
+efficiency_max: 5.0
+time_max: 1.0
+recovery_min: 0.2
+
+# Practical-significance tolerance used throughout (delta in main_v2.tex).
+delta: 0.05

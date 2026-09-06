@@ -1,0 +1,24 @@
+{
+  "factor": "seed_count",
+  "rows": [
+    {
+      "ablation_factor": "seed_count",
+      "value": 10,
+      "stage": "discovery",
+      "n_certified": 300,
+      "rmse": 0.007410389045955225,
+      "bias": -0.00017853493042214275,
+      "coverage_95": 0.96
+    },
+    {
+      "ablation_factor": "seed_count",
+      "value": 30,
+      "stage": "confirmation",
+      "n_certified": 900,
+      "rmse": 0.00822407487740596,
+      "bias": -9.446878747694016e-05,
+      "coverage_95": 0.9377777777777778
+    }
+  ],
+  "caveat": "Only 1 of 9 ablation factors listed in Section 51 is run in this session (seed count, derived from already-collected E01 data at no extra compute cost). The other 8 are NOT_RUN -- see docs/DEVIATIONS.md."
+}

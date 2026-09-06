@@ -1,0 +1,15 @@
+# Pinned per Master Prompt V3 Section 71/72.
+# NOTE: torch, gymnasium, stable-baselines3, mujoco are DELIBERATELY
+# ABSENT. See docs/DEVIATIONS.md -- this sandbox cannot install PyTorch
+# (disk space exhausted mid-install, verified). A production re-run
+# environment with adequate resources should add:
+#   torch>=2.0
+#   gymnasium[mujoco]>=0.29
+#   stable-baselines3>=2.0
+numpy==2.4.4
+scipy==1.17.1
+pandas==3.0.2
+matplotlib==3.10.8
+pytest==9.1.1
+scikit-learn==1.8.0
+PyYAML==6.0.3

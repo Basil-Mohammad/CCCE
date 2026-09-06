@@ -1,0 +1,42 @@
+{
+  "experiment_id": "E04_INCREMENTAL_INFORMATION+E05_INFORMATION_MATCHED",
+  "run_id": "combined",
+  "seed": 555,
+  "algorithm": "logistic_regression_5fold_cv",
+  "environment": "level1_analytical_scm_random_scenarios",
+  "task_sequence": "random_history+target+held_out_future",
+  "intervention_grid": [
+    1.0
+  ],
+  "control_protocol": "varied_per_scenario_pre_specified_generator",
+  "hyperparameters": {
+    "n_scenarios": 400,
+    "delta_envelope": -0.3,
+    "cv_folds": 5
+  },
+  "hyperparameter_hash": "553c80bef04e48b4",
+  "git_commit": "UNKNOWN_NO_GIT_REPO",
+  "python_version": "3.12.3",
+  "package_versions": {
+    "python": "3.12.3",
+    "numpy": "2.4.4",
+    "scipy": "1.17.1",
+    "pandas": "3.0.2",
+    "matplotlib": "3.10.8",
+    "pytest": "9.1.1",
+    "yaml": "6.0.3",
+    "torch": "NOT_INSTALLED_SANDBOX_CONSTRAINT",
+    "gymnasium": "NOT_INSTALLED_SANDBOX_CONSTRAINT",
+    "stable_baselines3": "NOT_INSTALLED_SANDBOX_CONSTRAINT",
+    "mujoco": "NOT_INSTALLED_SANDBOX_CONSTRAINT"
+  },
+  "hardware": {
+    "platform": "Linux-6.18.44-fc-v24-x86_64-with-glibc2.39",
+    "cpu_count_logical": 1,
+    "gpu_available": false,
+    "gpu_name": null,
+    "cuda_available": false,
+    "torch_status": "NOT_INSTALLED_SANDBOX_CONSTRAINT"
+  },
+  "timestamp": "2026-09-06T13:37:58.826640+00:00"
+}

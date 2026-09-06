@@ -1,0 +1,44 @@
+{
+  "n_scenarios": 400,
+  "label_positive_rate": 0.405,
+  "M0_conventional_diagnostics_only": {
+    "auc_mean": 0.5700452832849774,
+    "auc_std": 0.10258154375579333,
+    "features": [
+      "bwt_proxy",
+      "gi_proxy",
+      "representation_drift_proxy",
+      "task_similarity_proxy",
+      "update_magnitude_proxy"
+    ]
+  },
+  "M1_M0_plus_CCCE": {
+    "auc_mean": 0.5518198944229529,
+    "auc_std": 0.10182537096576919,
+    "features": [
+      "bwt_proxy",
+      "gi_proxy",
+      "representation_drift_proxy",
+      "task_similarity_proxy",
+      "update_magnitude_proxy",
+      "ccce"
+    ]
+  },
+  "M2_M0_plus_raw_QT_QC": {
+    "auc_mean": 0.5533546905222437,
+    "auc_std": 0.10723625671277941,
+    "features": [
+      "bwt_proxy",
+      "gi_proxy",
+      "representation_drift_proxy",
+      "task_similarity_proxy",
+      "update_magnitude_proxy",
+      "q_target",
+      "q_control"
+    ]
+  },
+  "incremental_gain_M1_over_M0": -0.018225388862024516,
+  "information_matched_gap_M1_minus_M2": -0.0015347960992908583,
+  "E04_verdict": "NOT_SUPPORTED (Falsification Condition A candidate)",
+  "E05_verdict": "SUPPORTED"
+}

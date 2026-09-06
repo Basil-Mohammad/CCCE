@@ -1,0 +1,41 @@
+{
+  "experiment_id": "E11_NEGATIVE_CONTROLS",
+  "run_id": "E11_NEGATIVE_CONTROLS",
+  "seed": 3000,
+  "algorithm": "analytical_paired_monte_carlo_estimator",
+  "environment": "level1_analytical_scm",
+  "task_sequence": "single_step_negative_control",
+  "intervention_grid": [
+    1.0
+  ],
+  "control_protocol": "identical_to_target_by_construction",
+  "hyperparameters": {
+    "n_scenarios": 80,
+    "n_replicates": 100
+  },
+  "hyperparameter_hash": "159598e888b901c4",
+  "git_commit": "UNKNOWN_NO_GIT_REPO",
+  "python_version": "3.12.3",
+  "package_versions": {
+    "python": "3.12.3",
+    "numpy": "2.4.4",
+    "scipy": "1.17.1",
+    "pandas": "3.0.2",
+    "matplotlib": "3.10.8",
+    "pytest": "9.1.1",
+    "yaml": "6.0.3",
+    "torch": "NOT_INSTALLED_SANDBOX_CONSTRAINT",
+    "gymnasium": "NOT_INSTALLED_SANDBOX_CONSTRAINT",
+    "stable_baselines3": "NOT_INSTALLED_SANDBOX_CONSTRAINT",
+    "mujoco": "NOT_INSTALLED_SANDBOX_CONSTRAINT"
+  },
+  "hardware": {
+    "platform": "Linux-6.18.44-fc-v24-x86_64-with-glibc2.39",
+    "cpu_count_logical": 1,
+    "gpu_available": false,
+    "gpu_name": null,
+    "cuda_available": false,
+    "torch_status": "NOT_INSTALLED_SANDBOX_CONSTRAINT"
+  },
+  "timestamp": "2026-09-06T13:38:11.595116+00:00"
+}

@@ -1,0 +1,44 @@
+{
+  "experiment_id": "E06_CONTRAST_ROBUSTNESS",
+  "run_id": "E06_CONTRAST_ROBUSTNESS",
+  "seed": -1,
+  "algorithm": "analytical_exact_oracle",
+  "environment": "level1_analytical_scm",
+  "task_sequence": "single_step",
+  "intervention_grid": [
+    -2,
+    -1,
+    0,
+    1,
+    2
+  ],
+  "control_protocol": "L_C1_protected,L_C2_alt_task,L_C3_no_update",
+  "hyperparameters": {
+    "delta": 0.05
+  },
+  "hyperparameter_hash": "b285dc2e7d2c1334",
+  "git_commit": "UNKNOWN_NO_GIT_REPO",
+  "python_version": "3.12.3",
+  "package_versions": {
+    "python": "3.12.3",
+    "numpy": "2.4.4",
+    "scipy": "1.17.1",
+    "pandas": "3.0.2",
+    "matplotlib": "3.10.8",
+    "pytest": "9.1.1",
+    "yaml": "6.0.3",
+    "torch": "NOT_INSTALLED_SANDBOX_CONSTRAINT",
+    "gymnasium": "NOT_INSTALLED_SANDBOX_CONSTRAINT",
+    "stable_baselines3": "NOT_INSTALLED_SANDBOX_CONSTRAINT",
+    "mujoco": "NOT_INSTALLED_SANDBOX_CONSTRAINT"
+  },
+  "hardware": {
+    "platform": "Linux-6.18.44-fc-v24-x86_64-with-glibc2.39",
+    "cpu_count_logical": 1,
+    "gpu_available": false,
+    "gpu_name": null,
+    "cuda_available": false,
+    "torch_status": "NOT_INSTALLED_SANDBOX_CONSTRAINT"
+  },
+  "timestamp": "2026-09-06T13:37:59.404791+00:00"
+}

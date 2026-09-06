@@ -1,0 +1,22 @@
+{
+  "experiment_id": "E02_IDENTIFICATION",
+  "n_hand_constructed_cases": 6,
+  "hand_constructed_accuracy": 1.0,
+  "n_randomized_cases": 200,
+  "false_certification_count": 0,
+  "false_certification_rate": 0.0,
+  "identification_coverage": 0.33,
+  "abstention_rate": 0.34,
+  "status_distribution": {
+    "VALID": 28,
+    "BORDERLINE": 38,
+    "TASK_ALTERING": 20,
+    "INVALID": 46,
+    "UNIDENTIFIABLE": 68
+  },
+  "certification_distribution": {
+    "CERTIFIED": 50,
+    "VIOLATED": 16,
+    "UNIDENTIFIABLE": 134
+  }
+}

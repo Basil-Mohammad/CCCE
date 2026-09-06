@@ -1,0 +1,3 @@
+ablation_factor,value,stage,n_certified,rmse,bias,coverage_95
+seed_count,10,discovery,300,0.007410389045955225,-0.00017853493042214275,0.96
+seed_count,30,confirmation,900,0.00822407487740596,-9.446878747694016e-05,0.9377777777777778

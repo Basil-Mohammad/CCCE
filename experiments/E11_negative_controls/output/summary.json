@@ -1,0 +1,9 @@
+{
+  "experiment_id": "E11_NEGATIVE_CONTROLS",
+  "n_scenarios": 80,
+  "n_replicates_per_scenario": 100,
+  "false_positive_count": 2,
+  "empirical_false_positive_rate": 0.025,
+  "nominal_rate": 0.05,
+  "assessment": "consistent with nominal 5% rate"
+}

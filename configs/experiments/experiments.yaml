@@ -1,0 +1,177 @@
+version: 1
+experiments:
+  E01_GT_RECOVERY:
+    hypothesis: "The paired Monte Carlo estimator recovers the exact analytical CCCE^GT with low bias, controlled RMSE, and correct 95% CI coverage across beneficial/neutral/harmful/unidentifiable/hidden-vulnerability/control regimes."
+    environment: level1_analytical_scm
+    algorithm: analytical_paired_monte_carlo_estimator
+    task_sequences: [single_step_counterfactual]
+    seeds: {discovery: [0..9], confirmation: [1000..1029]}
+    interventions: [-2, -1, 0, 1, 2]
+    controls: [case_specific_pre_specified_LC]
+    checkpoints: [theta_1]
+    metrics: [rmse, bias, coverage_95, sign_accuracy, identification_coverage]
+    statistical_test: paired_t_interval
+    confidence_level: 0.95
+    multiple_testing: none_required_per_regime_reported_separately
+    output_files: [oracle.csv, ccce_estimates.csv, summary_by_regime.csv, manifest.json]
+    status: RUN (discovery + confirmation, both completed)
+
+  E02_IDENTIFICATION:
+    hypothesis: "The classifier assigns correct validity labels on hand-constructed cases and never CERTIFIES a non-VALID/BORDERLINE intervention."
+    environment: "n/a (rule-based logic test)"
+    algorithm: rule_based_classifier
+    task_sequences: [n/a]
+    seeds: [2024]
+    interventions: [randomized_battery_n200]
+    controls: [n/a]
+    checkpoints: [n/a]
+    metrics: [hand_constructed_accuracy, false_certification_rate, identification_coverage, abstention_rate]
+    statistical_test: none_deterministic_logic_check
+    confidence_level: n/a
+    multiple_testing: n/a
+    output_files: [identification.csv, summary.json, manifest.json]
+    status: RUN
+
+  E03_HIDDEN_VULNERABILITY:
+    hypothesis: "RC(nominal) ~ 0 while CCCE(c*) < -delta for some valid c* != nominal, on the T1-T4 -> T5 branching protocol."
+    environment: level2_synthetic_pointmass
+    algorithm: "numpy_ppo (naive for L_T, EWC for L_C)"
+    task_sequences: ["T1->T2->T3->T4->[T5 branch]"]
+    seeds: {discovery: [0, 1, 2, 3, 4]}
+    interventions: [0.5, 0.75, 1.0, 1.5, 2.0]
+    controls: [EWC_lambda_300]
+    checkpoints: [T1_end, T2_end, T3_end, T4_end, T5_end_branch_T, T5_end_branch_C]
+    metrics: [rc, ccce, bwt, representation_drift, update_magnitude]
+    statistical_test: paired_t_interval
+    confidence_level: 0.95
+    multiple_testing: none_single_comparison
+    output_files: [evaluation.csv, ccce_estimates.csv, baseline_metrics.csv, verdict.json, manifest.json]
+    status: "RUN (discovery only, REDUCED SCALE 5 seeds / ~1800 steps per task; NOT the locked 30/50-seed confirmation -- result: pattern_observed=False at this scale, see FINAL_EXPERIMENTAL_REPORT.md)"
+
+  E04_INCREMENTAL_INFORMATION:
+    hypothesis: "M1 = M0 + CCCE outperforms M0 (conventional-diagnostic proxies) at predicting an independently-generated future envelope-violation label, via 5-fold CV AUROC."
+    environment: level1_analytical_scm_random_scenarios
+    algorithm: logistic_regression_5fold_cv
+    task_sequences: [random_history_target_and_held_out_future]
+    seeds: [555]
+    interventions: [1.0]
+    controls: [varied_per_scenario]
+    checkpoints: [n/a]
+    metrics: [auroc, incremental_gain]
+    statistical_test: stratified_5fold_cv
+    confidence_level: n/a (CV std reported instead)
+    multiple_testing: n/a_single_comparison
+    output_files: [incremental_dataset.csv, summary.json, manifest.json]
+    status: "RUN (n=400 synthetic scenarios) -- result: NOT_SUPPORTED (Falsification Condition A candidate) in this dataset design; see caveats in FINAL_EXPERIMENTAL_REPORT.md regarding the independence of the label from the CCCE-generating contrast"
+
+  E05_INFORMATION_MATCHED:
+    hypothesis: "M1 = M0 + CCCE is not outperformed by M2 = M0 + (Q_T, Q_C), i.e. CCCE is not simply worse than direct access to the raw quantities."
+    environment: level1_analytical_scm_random_scenarios
+    algorithm: logistic_regression_5fold_cv
+    task_sequences: [random_history_target_and_held_out_future]
+    seeds: [555]
+    interventions: [1.0]
+    controls: [varied_per_scenario]
+    checkpoints: [n/a]
+    metrics: [auroc, information_matched_gap]
+    statistical_test: stratified_5fold_cv
+    confidence_level: n/a
+    multiple_testing: n/a
+    output_files: [incremental_dataset.csv, summary.json, manifest.json]
+    status: "RUN jointly with E04 (shared dataset) -- result: SUPPORTED (gap ~ -0.0015, i.e. CCCE and raw (Q_T,Q_C) are approximately equally weak predictors of this label; see caveats)"
+
+  E06_CONTRAST_ROBUSTNESS:
+    hypothesis: "CCCE sign is robust across three pre-specified counterfactual controls (protected update, alternative task, no-update) at this scenario's parameters."
+    environment: level1_analytical_scm
+    algorithm: analytical_exact_oracle
+    task_sequences: [single_step]
+    seeds: [n/a exact computation]
+    interventions: [-2, -1, 0, 1, 2]
+    controls: [L_C1_protected, L_C2_alt_task, L_C3_no_update]
+    checkpoints: [n/a]
+    metrics: [sign_consistency, magnitude_range]
+    statistical_test: none_exact_computation
+    confidence_level: n/a
+    multiple_testing: n/a
+    output_files: [ccce_estimates_multi_control.csv, robustness_classification.json, manifest.json]
+    status: "RUN -- result: robust (sign-consistent) across all three controls for this scenario's parameters"
+
+  E07_FUTURE_VULNERABILITY:
+    hypothesis: "Checkpoint CCCE_t is prospectively associated with FutureRisk_{t+Delta} under a locked future continuation."
+    environment: level1_analytical_scm_multi_step
+    algorithm: analytical_exact_oracle
+    task_sequences: [hist_2_tasks, probe_branch, future_2_tasks_locked]
+    seeds: [777]
+    interventions: [1.0]
+    controls: [protected_alternative_at_checkpoint]
+    checkpoints: [checkpoint_t, checkpoint_t_plus_delta]
+    metrics: [pearson_r, spearman_rho]
+    statistical_test: pearson_and_spearman_correlation
+    confidence_level: n/a (p-values reported)
+    multiple_testing: n/a_single_comparison
+    output_files: [future_risk.csv, summary.json, manifest.json]
+    status: "RUN (n=60 scenarios) -- result: no detectable association (r=+0.02, p=0.88) in this fully-randomized design; explicitly NOT interpreted as a causal claim regardless of outcome (this null result is itself informative about this specific synthetic design's coupling structure, documented in FINAL_EXPERIMENTAL_REPORT.md)"
+
+  E08_CROSS_ALGORITHM:
+    hypothesis: "The phenomenon observed under PPO is at least qualitatively present under SAC."
+    environment: level2_synthetic_pointmass
+    algorithm: SAC
+    task_sequences: [n/a]
+    seeds: [n/a]
+    interventions: [n/a]
+    controls: [n/a]
+    checkpoints: [n/a]
+    metrics: [n/a]
+    statistical_test: n/a
+    confidence_level: n/a
+    multiple_testing: n/a
+    output_files: []
+    status: "NOT_RUN -- SAC requires PyTorch/Stable-Baselines3, which cannot be installed in this sandbox (disk space exhausted mid-install; see docs/DEVIATIONS.md). A from-scratch NumPy SAC was judged out of scope for this session."
+
+  E09_CL_BASELINES:
+    hypothesis: "BWT differs meaningfully across naive/replay/EWC baselines on the T1->T2->T3 sequence."
+    environment: level2_synthetic_pointmass
+    algorithm: "naive_ppo, replay_ppo, ewc_ppo (numpy)"
+    task_sequences: ["T1->T2->T3"]
+    seeds: [0, 1, 2, 3, 4]
+    interventions: [n/a]
+    controls: [n/a]
+    checkpoints: [T1_end, T2_end, T3_end]
+    metrics: [bwt]
+    statistical_test: descriptive_mean_std_only
+    confidence_level: n/a
+    multiple_testing: n/a
+    output_files: [diagnostics_by_baseline.csv, summary.json, manifest.json]
+    status: "RUN (5 seeds, ~1200 steps/task, REDUCED SCALE) -- result: all BWT magnitudes near zero (<0.002); likely too small a training budget to induce meaningful forgetting at all, making this comparison INCONCLUSIVE rather than a real discriminating test of the baselines (documented limitation). Distillation and UPGD baselines are implemented and unit-tested but not included in this specific comparison run due to time constraints."
+
+  E10_ABLATIONS:
+    hypothesis: "n/a (methodological sensitivity checks, not a single hypothesis)"
+    environment: level1_analytical_scm
+    algorithm: n/a
+    task_sequences: [n/a]
+    seeds: [see E01 discovery vs confirmation]
+    interventions: [n/a]
+    controls: [n/a]
+    checkpoints: [n/a]
+    metrics: [rmse_vs_seed_count]
+    statistical_test: descriptive_comparison
+    confidence_level: n/a
+    multiple_testing: n/a
+    output_files: []
+    status: "PARTIALLY RUN -- only a seed-count sensitivity check is derivable directly from already-collected E01 discovery (N=10) vs confirmation (N=30) data (see FINAL_EXPERIMENTAL_REPORT.md). The other 8 ablation factors listed in Section 51 are NOT_RUN due to time constraints."
+
+  E11_NEGATIVE_CONTROLS:
+    hypothesis: "The estimator's empirical false-positive rate (95% CI excludes 0 when GT is exactly 0) is consistent with the nominal 5% rate."
+    environment: level1_analytical_scm
+    algorithm: analytical_paired_monte_carlo_estimator
+    task_sequences: [single_step_negative_control]
+    seeds: [3000..3079]
+    interventions: [1.0]
+    controls: [identical_to_target_by_construction]
+    checkpoints: [n/a]
+    metrics: [empirical_false_positive_rate]
+    statistical_test: binomial_rate_check
+    confidence_level: 0.95
+    multiple_testing: n/a
+    output_files: [ccce_estimates.csv, summary.json, manifest.json]
+    status: "RUN (n=80 scenarios) -- result: 2.5% empirical rate vs 5% nominal, consistent (well-calibrated, no red flag)"
