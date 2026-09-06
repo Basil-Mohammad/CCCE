@@ -14,6 +14,7 @@ Per Master Prompt V3 Section 67.
 | E05_INFORMATION_MATCHED | RUN | (shares E04's dataset) |
 | E06_CONTRAST_ROBUSTNESS | RUN | Exact computation, 1 scenario x 3 controls x 5 c-values |
 | E07_FUTURE_VULNERABILITY | RUN | 60 synthetic scenarios |
+| E08_CROSS_ALGORITHM | **RUN (real Stable-Baselines3, not NumPy)** | 10 seeds, PPO+SAC, T1->T2->T3, 1200 steps/task |
 | E09_CL_BASELINES | RUN (discovery + **locked confirmation**) | Discovery: 10 seeds/3 baselines + order-confound check; Confirmation: **30 fresh seeds, all 5 baselines, pre-registered** |
 | E10_ABLATIONS | PARTIALLY RUN | 1 of 9 ablation factors (seed count) |
 | E11_NEGATIVE_CONTROLS | RUN | 80 synthetic scenarios |
@@ -27,13 +28,16 @@ knowledge, but see Section 8 (limitations of our own verification).
 
 ## 3. Excluded runs / exclusion reasons
 
-- **E08_CROSS_ALGORITHM (SAC)**: NOT_RUN. No PyTorch-based SAC
-  implementation could be installed (disk space exhausted; confirmed via
-  two separate attempts including the official CPU-only wheel index,
-  which is also unreachable from this sandbox's network egress
-  allowlist -- see `docs/DEVIATIONS.md` #1, #3).
-- **Standard MuJoCo/Gymnasium benchmark validation (Section 9)**:
-  NOT_RUN. Same root cause.
+- **E08_CROSS_ALGORITHM (SAC)**: **NOW RUN** (added this session) with a
+  real Stable-Baselines3 backend, after PyTorch became installable in
+  this sandbox for reasons not fully understood -- see
+  `docs/DEVIATIONS.md` #10 for the complete, transparent account,
+  including that this reverses a constraint independently confirmed
+  impossible in two earlier sessions of this same project.
+- **Standard MuJoCo/Gymnasium benchmark validation (Section 9)**: now
+  technically possible (smoke-tested successfully: `HalfCheetah-v5` and
+  `Hopper-v5` both reset and step correctly) but **no full experiment was
+  run** this session due to time constraints, not a technical blocker.
 - **E03/E09 locked 30-seed confirmation stage**: **NOW RUN** (added this
   session). Both experiments have genuine pre-registered confirmation
   stages with 30 fresh seeds and a ~7-10x larger training budget than
@@ -279,7 +283,20 @@ attempted in this session.
 
 ## 15. Cross-algorithm validation
 
-NOT_RUN. See Section 3.
+**RUN**, with a real Stable-Baselines3 backend (E08), after PyTorch
+became installable in this sandbox (see Section 5 above and
+`docs/DEVIATIONS.md` #10 for the full account of this reversal). 10
+seeds, real PPO and SAC, T1->T2->T3 sequence, 1,200 steps/task: PPO mean
+BWT = -0.2388 +/- 0.7161 (one catastrophic-collapse outlier seed at
+BWT=-2.39; other 9 seeds ~0); SAC mean BWT = +0.0028 +/- 0.0134 (no
+comparable outlier). Paired-difference p=0.346 (uninformative given the
+outlier's variance contribution). This is the only experiment in the
+project using the real deep-RL backend rather than the NumPy substitute,
+and its qualitative finding (occasional catastrophic PPO instability at
+very small training budgets, not mirrored by SAC) is a genuinely
+different pattern from anything observed in the NumPy-based experiments,
+plausibly reflecting real neural-network optimization dynamics that a
+linear-Gaussian policy cannot exhibit.
 
 ## 16. Computational cost
 
@@ -318,7 +335,13 @@ Per `main_v2.tex` Section 8 and this project's `configs/experiments/experiments.
   training variance at this scale," which is a more specific statement
   than the discovery-stage-only result supported.
 - **Failures E, F, G** (sequence dependence, SAC, control dependence): F
-  (SAC) remains NOT_RUN. E (sequence dependence) has partial evidence:
+  (SAC) is now testable -- E08's real-SB3 result did not show the same
+  qualitative pattern as PPO (a catastrophic single-seed collapse under
+  PPO not mirrored by SAC), but at a budget (1,200 steps/task) too small
+  to distinguish "phenomenon doesn't survive SAC" from "neither algorithm
+  is meaningfully trained yet," so this remains inconclusive rather than
+  a clean trigger or non-trigger of Failure F. E (sequence dependence)
+  has partial evidence:
   E09's new order-confound check (Section 5) found that task order
   materially changes per-seed outlier behavior, which is a form of
   sequence-sensitivity, though it was not tested for E03's specific

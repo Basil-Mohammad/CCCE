@@ -114,19 +114,19 @@ experiments:
 
   E08_CROSS_ALGORITHM:
     hypothesis: "The phenomenon observed under PPO is at least qualitatively present under SAC."
-    environment: level2_synthetic_pointmass
-    algorithm: SAC
-    task_sequences: [n/a]
-    seeds: [n/a]
+    environment: level2_synthetic_pointmass_gym_wrapped
+    algorithm: "PPO, SAC (REAL stable_baselines3, torch backend)"
+    task_sequences: ["T1->T2->T3"]
+    seeds: [0..9]
     interventions: [n/a]
     controls: [n/a]
     checkpoints: [n/a]
-    metrics: [n/a]
-    statistical_test: n/a
-    confidence_level: n/a
+    metrics: [bwt]
+    statistical_test: paired_t_test_uncorrected
+    confidence_level: n/a (single comparison)
     multiple_testing: n/a
-    output_files: []
-    status: "NOT_RUN -- SAC requires PyTorch/Stable-Baselines3, which cannot be installed in this sandbox (disk space exhausted mid-install; see docs/DEVIATIONS.md). A from-scratch NumPy SAC was judged out of scope for this session."
+    output_files: [diagnostics_by_algorithm.csv, summary.json, manifest.json, confirmation_manifest.yaml]
+    status: "RUN -- PyTorch/Stable-Baselines3 became installable in a later session (see docs/DEVIATIONS.md #10 for the full, honest account of this reversal). REAL SB3 PPO and SAC trained on T1->T2->T3, 10 seeds, 1200 steps/task. Result: PPO mean BWT=-0.2388+-0.7161 (dominated by one catastrophic-collapse outlier seed, BWT=-2.39; other 9 seeds ~0); SAC mean BWT=+0.0028+-0.0134 (no comparable outlier, far more stable at this budget). Paired-difference p=0.346 (not significant, but underpowered given the single PPO outlier's huge variance contribution). Real neural-network PPO shows qualitatively different (more extreme, more volatile) instability than the linear-policy NumPy substitute used elsewhere in this project."
 
   E09_CL_BASELINES:
     hypothesis: "BWT differs meaningfully across naive/replay/EWC/distillation/UPGD baselines on the T1->T2->T3 sequence; task order (Section 11) does not confound this comparison."

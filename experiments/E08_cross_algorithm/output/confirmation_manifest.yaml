@@ -1,0 +1,28 @@
+{
+  "algorithms": [
+    "PPO",
+    "SAC"
+  ],
+  "backend": "real_stable_baselines3 (torch 2.14.0+cu130)",
+  "experiment_id": "E08_CROSS_ALGORITHM",
+  "n_eval_episodes": 6,
+  "primary_outcome": "mean_BWT_on_T1_per_algorithm",
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "sequence": [
+    "T1",
+    "T2",
+    "T3"
+  ],
+  "steps_per_task": 1200
+}

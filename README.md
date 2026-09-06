@@ -8,11 +8,13 @@ Learning" (`main_v2.tex`).
 
 - **`docs/DEVIATIONS.md`** -- every place this implementation deviates
   from the exact letter of the specification, why, and what the
-  scientific consequence is. This sandbox has 1 CPU core, no GPU, and
-  cannot install PyTorch (confirmed: disk space is exhausted mid-install).
-  As a direct consequence, **SAC and MuJoCo/standard-benchmark validation
-  are `NOT_RUN`**, and PPO is a from-scratch NumPy substitute for
-  Stable-Baselines3.
+  scientific consequence is. PyTorch/Stable-Baselines3/MuJoCo were
+  confirmed **impossible** to install in two early sessions (disk space +
+  network egress constraints), then became installable in a later
+  session for reasons not fully understood -- see Section 10 for the
+  full, transparent account. Only `E08_cross_algorithm` currently uses
+  the real deep-RL backend; every other experiment still uses the
+  from-scratch NumPy substitute for PPO described there.
 - **`FINAL_EXPERIMENTAL_REPORT.md`** -- the honest, pre-specified
   scientific verdict: **UNIDENTIFIABLE** (Level 1 is fully compliant with
   spec; Level 2 now has genuine locked 30-seed confirmation-stage results
@@ -43,6 +45,7 @@ python experiments/E03_hidden_vulnerability/run.py --stage confirmation  # ~6 mi
 python experiments/E05_information_matched/run.py   # also produces E04's outputs
 python experiments/E06_contrast_robustness/run.py
 python experiments/E07_future_vulnerability/run.py
+python experiments/E08_cross_algorithm/run.py         # ~8-9 min, real Stable-Baselines3 PPO+SAC
 python experiments/E09_baselines/run.py --stage discovery
 python experiments/E09_baselines/run.py --stage confirmation  # ~15-18 min, checkpointed/resumable
 python experiments/E10_ablations/run.py              # run E01 first
@@ -62,8 +65,8 @@ python experiments/E11_negative_controls/run.py
 | Pre-registration lock (Section 57) | **Implemented and used** for E03/E09 confirmation, SHA-256 hashed |
 | Checkpoint/resume (Section 6) | **Implemented and exercised** for E09 after a real interruption |
 | Task-order-confound check (Section 11) | **Implemented and run** (discovery scale) -- found task order changes outlier behavior by ~300x |
-| SAC | NOT implemented (no PyTorch -- confirmed via two independent install attempts) |
-| MuJoCo/standard benchmarks | NOT implemented (no PyTorch/mujoco) |
+| SAC | **RUN (E08, real Stable-Baselines3 backend)** -- see docs/DEVIATIONS.md #10 |
+| MuJoCo/standard benchmarks | Smoke-tested (HalfCheetah-v5, Hopper-v5 reset/step confirmed); no full experiment |
 | Locked 50-seed confirmation tier | NOT run (30-seed tier is compliant and complete; 50-seed tier not attempted) |
 
 ## Directory structure

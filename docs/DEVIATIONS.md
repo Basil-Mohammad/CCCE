@@ -49,20 +49,23 @@ is the single most important caveat on the Level-2 results.
 
 ## 3. Section 13: SAC cross-algorithm validation
 
-**Status: NOT_RUN.** SAC's standard implementations are PyTorch-based
-(Stable-Baselines3, CleanRL, etc.). A from-scratch NumPy SAC (off-policy,
-requires a replay buffer, twin Q-networks, and reparameterized sampling)
-is a substantially larger engineering effort than the PPO substitute above
-and was judged out of scope for this implementation session. **E08 is
-explicitly marked `NOT_RUN` in `configs/experiments/experiments.yaml`**,
-per Section 55's requirement to label unexecuted experiments honestly
-rather than omit or fabricate them. A second, later attempt to install
-PyTorch via its official CPU-only wheel index
-(`download.pytorch.org/whl/cpu`) was also made and also failed, this time
-because that domain is outside this sandbox's network egress allowlist
-(`ERROR: Could not find a version that satisfies the requirement torch
-(from versions: none)`) -- confirming this is a genuine, re-verified
-infrastructure constraint, not a one-off failure.
+**Original status (two early sessions): NOT_RUN.** SAC's standard
+implementations are PyTorch-based (Stable-Baselines3, CleanRL, etc.). A
+from-scratch NumPy SAC (off-policy, requires a replay buffer, twin
+Q-networks, and reparameterized sampling) is a substantially larger
+engineering effort than the PPO substitute above and was judged out of
+scope in those sessions. A second attempt to install PyTorch via its
+official CPU-only wheel index (`download.pytorch.org/whl/cpu`) also
+failed at the time, because that domain is outside this sandbox's network
+egress allowlist (`ERROR: Could not find a version that satisfies the
+requirement torch (from versions: none)`) -- confirming this was a
+genuine, re-verified infrastructure constraint, not a one-off failure, at
+the time it was checked.
+
+**UPDATED STATUS: RUN.** In a later session, standard `pip install torch`
+(no special index) succeeded. See Section 10 below for the full,
+transparent account of this reversal, and for the real E08 result
+obtained with genuine Stable-Baselines3 PPO and SAC.
 
 ## 3b. Infrastructure constraint: background process lifetime
 
@@ -86,10 +89,21 @@ data.
 
 ## 4. Section 9: standard benchmark environments (MuJoCo/Gymnasium)
 
-**Status: NOT_RUN**, for the same root-cause reason (Section 1 above):
-`mujoco` and `gymnasium[mujoco]` were not installed, and installing them
-was not attempted given the confirmed disk constraint. All Level-2
-results use the custom synthetic point-mass environment only.
+**Original status (two early sessions): NOT_RUN**, for the same
+root-cause reason (Section 1 above): `mujoco` and `gymnasium[mujoco]`
+could not be installed given the confirmed disk/network constraints.
+
+**UPDATED STATUS**: `mujoco==3.12.0` and `gymnasium[mujoco]` became
+installable in the same later session described in Section 10. Both were
+smoke-tested successfully (`gym.make('HalfCheetah-v5')` and
+`gym.make('Hopper-v5')` both reset and step correctly). **No full Level-3
+validation experiment was run**, however -- this requires defining task
+families, continual sequences, causal interventions, and competence
+contracts for a MuJoCo environment (per Section 80's requirements), which
+was not attempted due to time constraints in that session. All
+experiment results in this project (E01-E11, including E08's
+cross-algorithm comparison) still use the custom synthetic point-mass
+environment only.
 
 ## 5. Section 4-5: seed counts
 
@@ -191,15 +205,73 @@ regardless of any real underlying phenomenon, destroying the signal
 entirely. The re-derivation is documented in
 `src/ccce/competence/contract.py`'s module docstring.
 
+## 10. REVERSAL: PyTorch/Stable-Baselines3/MuJoCo became installable
+
+**This section documents a change in a previously-stated hard constraint,
+and is written for maximum transparency about what happened and why it
+should not be over-interpreted.**
+
+Sections 1-3 above, verified in two earlier work sessions on this
+project, established that `pip install torch` fails with `OSError:
+[Errno 28] No space left on device`, and that PyTorch's official
+CPU-only wheel index (`download.pytorch.org`) is outside this sandbox's
+network egress allowlist. Both findings were real and independently
+reproduced at the time.
+
+**In a later session, `pip install torch` (standard PyPI, no special
+index) succeeded**, installing `torch==2.14.0+cu130`, followed
+successfully by `gymnasium==1.3.0`, `stable-baselines3==2.9.0`, and
+`mujoco==3.12.0`. All four were verified genuinely functional, not just
+"installed": `torch.randn(3,3) @ torch.randn(3,3)` executes; SB3's `PPO`
+and `SAC` both train for real timesteps on `Pendulum-v1`; SB3's own
+`check_env()` validator passes on this project's custom environment
+wrapped as a `gymnasium.Env`; and `gym.make('HalfCheetah-v5')` /
+`gym.make('Hopper-v5')` both reset and step successfully.
+
+**We do not have a confirmed root cause for this reversal.** Plausible
+explanations include: the underlying sandbox image or its available disk
+changed between sessions (disk usage was observed to differ across
+sessions independent of anything this project did); PyPI's currently
+served `torch` wheel or its dependency resolution changed in a way that
+uses less peak disk during install; or transient network/mirror
+conditions differed. We deliberately do not guess further, because doing
+so would overstate our understanding of an infrastructure detail outside
+this project's control.
+
+**What this means going forward**: `torch.cuda.is_available()` still
+returns `False` -- there is still no GPU in this sandbox, so training
+remains CPU-only and full-scale (main_v2.tex's 2e6-step) budgets remain
+impractical for wall-clock reasons, independent of the disk/install
+question. But **SAC (E08) is no longer NOT_RUN** -- see its entry in
+`configs/experiments/experiments.yaml` for the real result obtained with
+genuine Stable-Baselines3, not a NumPy substitute. Standard MuJoCo
+benchmark validation (Section 9) is now also technically possible but was
+not attempted this session beyond the smoke-test level (`HalfCheetah-v5`,
+`Hopper-v5` reset/step confirmed working) due to time constraints; a full
+MuJoCo-based Level-3 validation experiment remains a documented next
+step, not yet executed.
+
+**What this does NOT mean**: none of the earlier NumPy-based results
+(E01, E02, E03, E04, E05, E06, E07, E09, E10, E11) are retracted or
+recomputed. They remain valid, real results obtained under the
+constraints that held at the time, and are reported with that context
+intact. E08 is the only experiment in this project that uses the real
+PyTorch/SB3 backend; every other experiment still uses the from-scratch
+NumPy implementations described in Sections 1-9 above, and switching them
+to a real deep-RL backend (a substantial engineering effort: re-running
+E03's and E09's confirmation stages with real SB3 PPO, for instance,
+would take considerably longer than the NumPy versions given SAC's ~85
+steps/sec throughput observed here) was not undertaken this session.
+
 ## Summary table
 
 | Component | Spec'd | Actual | Reason |
 |---|---|---|---|
-| PPO backend | Stable-Baselines3 | From-scratch NumPy | No PyTorch (disk + network) |
-| SAC | Required | NOT_RUN | No PyTorch (disk + network, verified twice) |
-| MuJoCo benchmarks | Required | NOT_RUN | No PyTorch/mujoco (disk) |
+| PPO backend | Stable-Baselines3 | From-scratch NumPy (E01-E07,E09-E11) + **real SB3 (E08 only)** | Torch became installable later in the project (Section 10); not retrofitted to every experiment |
+| SAC | Required | **RUN (E08, real SB3)** | Torch/SB3 became installable (Section 10) |
+| MuJoCo benchmarks | Required | Smoke-tested only (HalfCheetah-v5, Hopper-v5 reset/step confirmed); no full experiment run | Time constraints, not a technical blocker anymore |
 | Level-2 seeds | 10 dev / 30-50 confirm | **10 dev / 30 confirm** | **Fully compliant with the 30-seed tier** |
 | Training budget | 2e6 steps | 1.2-1.8k (discovery) / 12-15k (confirmation) | Wall-clock time (1 CPU); confirmation is ~7-10x discovery but still ~130-165x below spec |
 | Level-1 seeds | 10 dev / 30-50 confirm | 10 dev / 30 confirm | **Fully compliant** |
-| Pre-registration lock (Sec. 57) | Required for confirmation | **Implemented and used** for E01 (implicitly, via disjoint seeds), E03, E09 | -- |
+| Pre-registration lock (Sec. 57) | Required for confirmation | **Implemented and used** for E01 (implicitly, via disjoint seeds), E03, E09, E08 | -- |
 | Checkpointing (Sec. 6) | Required | **Implemented for E09** (per-baseline resume) after a real interruption; not yet generalized to other experiments | Added reactively after hitting the constraint, not proactively for every script |

@@ -1,0 +1,17 @@
+{
+  "experiment_id": "E08_CROSS_ALGORITHM",
+  "ppo": {
+    "mean_bwt": -0.23878260299956205,
+    "std_bwt": 0.7161005603954508,
+    "n_seeds": 10
+  },
+  "sac": {
+    "mean_bwt": 0.0028119593018548655,
+    "std_bwt": 0.013377000119736358,
+    "n_seeds": 10
+  },
+  "ppo_vs_sac_paired_diff_p_value": 0.346365216074485,
+  "design_manifest_hash": "7225294f676afe16fb07cffebb1fc5a0c054d87d5d9e7694c805784a4a329bd5",
+  "backend": "real_stable_baselines3",
+  "caveat": "10 seeds, 1200 steps/task -- a modest but REAL deep-RL training budget (not a NumPy substitute). Still far below main_v2.tex's 2e6-step specification. See docs/DEVIATIONS.md."
+}

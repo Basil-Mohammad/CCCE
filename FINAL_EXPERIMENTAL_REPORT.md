@@ -9,13 +9,14 @@ Learning" (main_v2.tex). **The implementation is substantially complete
 for Level 1 (analytical SCM, fully compliant with the specified 10/30
 discovery/confirmation seed structure) and now includes genuine locked
 30-seed confirmation-stage results for Level 2 (synthetic RL environment)
-as well, added in a follow-up session; Level 3 (standard/MuJoCo
-benchmarks) and SAC cross-algorithm validation remain not attempted**,
-due to a verified, hard compute constraint of the execution sandbox (no
-GPU, 1 CPU core, and insufficient disk space to install PyTorch, with a
-second independent attempt via PyTorch's official CPU-only wheel index
-also blocked by this sandbox's network egress policy -- see
-`docs/DEVIATIONS.md`).
+as well, added in a follow-up session. In a further session, PyTorch and
+Stable-Baselines3 -- previously confirmed impossible to install in two
+earlier sessions (see `docs/DEVIATIONS.md` #1-3) -- became installable
+for reasons not fully understood, enabling a genuine SAC cross-algorithm
+experiment (E08) with a real deep-RL backend.** Standard MuJoCo benchmark
+validation (Section 9's "Level 3") is now technically possible (verified
+via smoke tests on HalfCheetah-v5 and Hopper-v5) but was not run as a
+full experiment this session due to time constraints.
 
 No result in this report is fabricated. Every number below was produced
 by running the code in this repository and is traceable to a CSV/JSON
@@ -53,7 +54,11 @@ and SHA-256 hashed before any confirmation-stage result is computed.
    and 6 tasks with documented causal overlap. Fully implemented, fully
    tested (18 unit tests), exercised at both discovery and confirmation
    scale.
-3. **Level 3 -- Standard benchmarks (MuJoCo/Gymnasium)**: **NOT_RUN.**
+3. **Level 3 -- Standard benchmarks (MuJoCo/Gymnasium)**: smoke-tested
+   only (`HalfCheetah-v5`, `Hopper-v5` reset/step confirmed working after
+   `mujoco`/`gymnasium[mujoco]` became installable -- see Learning
+   Algorithms below and Deviations #10); **no full validation experiment
+   run**.
 
 ## Task Sequences
 
@@ -76,12 +81,17 @@ NOT_RUN.
 
 ## Learning Algorithms
 
-- **PPO**: from-scratch NumPy implementation (documented substitute for
-  Stable-Baselines3; see Deviations #2). Real, gradient-trained, verified
-  deterministic given a fixed seed.
-- **SAC**: **NOT_RUN** (confirmed twice: standard PyPI install fails from
-  disk exhaustion; the official CPU-only wheel index is outside this
-  sandbox's network egress allowlist).
+- **PPO**: primarily a from-scratch NumPy implementation (documented
+  substitute for Stable-Baselines3; see Deviations #2), used for
+  E01/E03/E04/E05/E06/E07/E09/E10/E11. **E08 uses real Stable-Baselines3
+  PPO** (see below and Deviations #10). Both are verified deterministic
+  given a fixed seed.
+- **SAC**: **RUN (E08 only)**, using real Stable-Baselines3, after
+  PyTorch became installable in this sandbox in a later session --
+  reversing a constraint independently confirmed impossible twice earlier
+  (standard PyPI install failing from disk exhaustion; the official
+  CPU-only wheel index being outside this sandbox's network egress
+  allowlist). See Deviations #10 for the complete, transparent account.
 
 ## Baselines
 
@@ -214,7 +224,39 @@ setting, which was not tested.
 
 ## Cross-Algorithm Results
 
-**NOT_RUN** (SAC requires PyTorch; see Deviations).
+**RUN with a real deep-RL backend** (this is the only experiment in the
+project using genuine PyTorch + Stable-Baselines3, not the NumPy
+substitute -- see `docs/DEVIATIONS.md` #10 for the full, transparent
+account of how torch/SB3/MuJoCo became installable in this sandbox
+partway through this project, after being confirmed impossible in two
+earlier sessions).
+
+10 seeds, real SB3 PPO and SAC, T1->T2->T3 sequence, 1,200 steps/task
+(matched to E09's discovery-stage budget for comparability):
+
+| Algorithm | Mean BWT | Std BWT | Notes |
+|---|---|---|---|
+| PPO | -0.2388 | 0.7161 | Dominated by one catastrophic-collapse outlier (seed 0: BWT=-2.39); other 9 seeds all ~0.0000 |
+| SAC | +0.0028 | 0.0134 | No comparable outlier; markedly more stable at this budget |
+
+(source: `experiments/E08_cross_algorithm/output/summary.json`)
+
+Paired-difference test: p=0.346 (not significant, but this is
+uninformative given the extreme variance contributed by PPO's single
+outlier seed). **The qualitative finding is that real neural-network PPO
+at this very small training budget can occasionally collapse
+catastrophically** (a ~2.4-unit swing in a system where per-episode
+returns are of similar order of magnitude), while SAC's off-policy,
+more sample-efficient learning did not exhibit a comparable failure mode
+at the same budget. This is a genuinely different qualitative pattern
+from the earlier NumPy-linear-policy experiments (E03, E09), where
+outlier magnitudes were more modest (~0.08) and occurred at a similar
+rate for multiple methods including naive. **This should be read as
+"cross-algorithm robustness within the evaluated settings was not
+observed at this specific tiny budget," not as a general claim about
+PPO vs. SAC** -- 1,200 steps/task is an extremely small budget for a
+neural-network policy, and the instability observed may be an artifact
+of under-training rather than a property of PPO in general.
 
 ## Continual-Learning Baselines
 
@@ -408,26 +450,46 @@ conditions in `main_v2.tex` Section 8:
 >   even if one exists -- this remains a limitation of the experimental
 >   design, not evidence against the hypothesis, and was not revisited
 >   this session.
-> - SAC cross-algorithm validation and standard-benchmark validation
->   remain NOT_RUN, now confirmed via two independent installation
->   attempts (standard PyPI, and the official CPU-only wheel index) both
->   blocked by this sandbox's disk and network constraints respectively.
+> - **SAC cross-algorithm validation is now RUN** with a real
+>   Stable-Baselines3 backend (E08), after PyTorch became installable in
+>   this sandbox for reasons not fully understood (see
+>   `docs/DEVIATIONS.md` #10). The result itself does not resolve
+>   UNIDENTIFIABLE -- at the tiny 1,200-step/task budget tested, real PPO
+>   showed a catastrophic single-seed collapse (BWT=-2.39) not mirrored by
+>   SAC, which is a genuinely different and more extreme instability
+>   pattern than anything seen in the NumPy-substitute experiments, and
+>   raises rather than settles the question of what a fair budget for
+>   cross-algorithm comparison would be. Standard MuJoCo benchmark
+>   validation (Section 9's Level 3) is now also technically possible
+>   (smoke-tested successfully on HalfCheetah-v5 and Hopper-v5) but no
+>   full experiment was run this session.
 > - The 50-seed tier specified for "the most critical claims" (Section 4)
 >   was not attempted for Level 2, even after this session's upgrade to
 >   30 seeds; nor was the full 2x10^6-step training budget, which remains
->   ~130-165x larger than what was actually run.
+>   ~130-165x larger than what was actually run. Now that a real deep-RL
+>   backend is available, closing this gap for E01/E03/E09 (not just E08)
+>   is a concrete, achievable next step rather than a hypothetical one --
+>   though SAC's ~85 steps/sec throughput on this CPU-only hardware means
+>   a full 2e6-step run would still take on the order of hours per seed.
 >
-> **What would resolve UNIDENTIFIABLE from here**: (1) a real deep-RL
-> backend (PyTorch + Stable-Baselines3) and GPU compute, removing the
-> single-precision, single-core NumPy-PPO ceiling this session's results
-> sit under; (2) the full 2x10^6-step training budget, or at minimum
-> further budget scaling to test whether the E03 confirmation-stage
-> effect's magnitude grows toward or away from the practical-significance
-> threshold as training budget increases -- this session's data shows the
-> effect became *more* detectable (CI excluding zero) as budget grew from
-> 1,800 to 15,000 steps, which is suggestive but not conclusive; (3) a
-> multi-sequence confirmation design addressing the order-confound found
-> in Section 11; (4) SAC cross-algorithm validation; and (5) a redesigned
+> **What would resolve UNIDENTIFIABLE from here**: (1) GPU compute, to
+> make full-budget training (2x10^6 steps) practical in reasonable
+> wall-clock time -- the software stack (PyTorch + Stable-Baselines3) is
+> no longer the blocker it was; (2) migrating E01/E03/E09's confirmation
+> stages from the NumPy substitute to the now-available real SB3 backend,
+> so that the flagship hidden-vulnerability and baseline-comparison
+> results are not qualified by "linear-policy substitute" the way they
+> currently are; (3) further budget scaling to test whether the E03
+> confirmation-stage effect's magnitude grows toward or away from the
+> practical-significance threshold as training budget increases -- this
+> session's data shows the effect became *more* detectable (CI excluding
+> zero) as budget grew from 1,800 to 15,000 steps, which is suggestive
+> but not conclusive; (4) a multi-sequence confirmation design addressing
+> the order-confound found in Section 11; (5) a proper full-scale
+> cross-algorithm comparison (E08 was run at only 1,200 steps/task,
+> and its result -- a single catastrophic PPO outlier -- is itself
+> plausibly a budget artifact rather than a stable finding); and (6) a
+> redesigned
 > E04/E07 label that is not structurally decoupled from the CCCE-
 > generating contrast. None of these were completed this session, but
 > items (2) and (3) are now partially informed by real evidence
