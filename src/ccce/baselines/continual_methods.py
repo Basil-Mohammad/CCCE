@@ -41,11 +41,29 @@ class EWCState:
     anchor_params: Optional[np.ndarray] = None
     fisher_diag: Optional[np.ndarray] = None
     lambda_ewc: float = 400.0
+    max_penalty_grad_norm: float = 5.0  # matches PPOHyperparameters.gradient_clip_norm's default
 
     def penalty_grad(self, current_params: np.ndarray) -> np.ndarray:
         if self.anchor_params is None or self.fisher_diag is None:
             return np.zeros_like(current_params)
-        return -self.lambda_ewc * self.fisher_diag * (current_params - self.anchor_params)
+        # Normalize the Fisher diagonal to a bounded [0, 1] scale before
+        # applying lambda_ewc, rather than using the raw (unbounded) sum
+        # of squared per-sample gradients. Without this, an unusually
+        # large probe gradient (which can occur from ordinary training
+        # variance, especially at larger training budgets -- see
+        # docs/DEVIATIONS.md for the bug this fixes) produces a Fisher
+        # estimate whose scale is unbounded, and lambda_ewc=300-400 was
+        # then observed to amplify it into a parameter-diverging update.
+        fisher_max = np.max(self.fisher_diag) + 1e-12
+        fisher_normalized = self.fisher_diag / fisher_max
+        raw_grad = -self.lambda_ewc * fisher_normalized * (current_params - self.anchor_params)
+        # Additionally clip the penalty step itself, exactly as the main
+        # PPO gradient step is clipped, so the EWC correction can never by
+        # itself take a larger step than an ordinary gradient update.
+        norm = np.linalg.norm(raw_grad)
+        if norm > self.max_penalty_grad_norm:
+            raw_grad = raw_grad * (self.max_penalty_grad_norm / norm)
+        return raw_grad
 
     def update_after_task(self, policy: LinearGaussianPolicy, grad_samples: List[np.ndarray]) -> None:
         """Approximate the Fisher diagonal as the empirical variance of

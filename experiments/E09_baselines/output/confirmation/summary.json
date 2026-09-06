@@ -1,0 +1,40 @@
+{
+  "summary_by_baseline": {
+    "naive": {
+      "mean_bwt": 0.0006712434183638982,
+      "std_bwt": 0.033232176977643864,
+      "n_seeds": 30,
+      "n_outlier_seeds_gt_3std": 1
+    },
+    "replay": {
+      "mean_bwt": 0.0003118951370517949,
+      "std_bwt": 0.0012822961561583504,
+      "n_seeds": 30,
+      "n_outlier_seeds_gt_3std": 0,
+      "holm_significant_vs_naive_at_0.05": false
+    },
+    "ewc": {
+      "mean_bwt": 0.0007307185057484177,
+      "std_bwt": 0.021642972056100974,
+      "n_seeds": 30,
+      "n_outlier_seeds_gt_3std": 2,
+      "holm_significant_vs_naive_at_0.05": false
+    },
+    "distillation": {
+      "mean_bwt": 0.00036574604270014357,
+      "std_bwt": 0.021070676435567308,
+      "n_seeds": 30,
+      "n_outlier_seeds_gt_3std": 2,
+      "holm_significant_vs_naive_at_0.05": false
+    },
+    "upgd": {
+      "mean_bwt": 0.0038961891334187222,
+      "std_bwt": 0.043675700222899204,
+      "n_seeds": 30,
+      "n_outlier_seeds_gt_3std": 1,
+      "holm_significant_vs_naive_at_0.05": false
+    }
+  },
+  "confirmation_manifest_hash": "6ef60363d3173fd4c407af0d0c0c25945ab746e0668b6b74af54a32121bb94f0",
+  "caveat": "30 seeds, 12000 steps/task (confirmation stage)."
+}

@@ -1,0 +1,24 @@
+{
+  "summary_by_baseline": {
+    "naive": {
+      "mean_bwt": 8.482259185838003e-06,
+      "std_bwt": 0.0004763793526559077,
+      "n_seeds": 10,
+      "n_outlier_seeds_gt_3std": 1
+    },
+    "replay": {
+      "mean_bwt": 0.0003735343197705632,
+      "std_bwt": 0.03707749737303018,
+      "n_seeds": 10,
+      "n_outlier_seeds_gt_3std": 0
+    },
+    "ewc": {
+      "mean_bwt": -0.016576190959207683,
+      "std_bwt": 0.0329579521338195,
+      "n_seeds": 10,
+      "n_outlier_seeds_gt_3std": 0
+    }
+  },
+  "confirmation_manifest_hash": null,
+  "caveat": "10 seeds, 1200 steps/task (discovery stage)."
+}

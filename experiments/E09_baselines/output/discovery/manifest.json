@@ -1,20 +1,14 @@
 {
-  "experiment_id": "E03_HIDDEN_VULNERABILITY",
-  "run_id": "E03_HIDDEN_VULNERABILITY_discovery",
+  "experiment_id": "E09_CL_BASELINES",
+  "run_id": "E09_CL_BASELINES_discovery",
   "seed": -1,
-  "algorithm": "numpy_ppo(+EWC for L_C)",
+  "algorithm": "naive,replay,ewc (numpy)",
   "environment": "level2_synthetic_pointmass",
-  "task_sequence": "T1->T2->T3->T4->[T5 branch T vs C]",
-  "intervention_grid": [
-    0.5,
-    0.75,
-    1.0,
-    1.5,
-    2.0
-  ],
-  "control_protocol": "EWC(lambda=300)",
+  "task_sequence": "T1->T2->T3",
+  "intervention_grid": "n/a",
+  "control_protocol": "n/a (baseline comparison)",
   "hyperparameters": {
-    "total_env_steps_per_task": 1800,
+    "total_env_steps_per_task": 1200,
     "seeds": [
       0,
       1,
@@ -26,10 +20,9 @@
       7,
       8,
       9
-    ],
-    "delta": 0.03
+    ]
   },
-  "hyperparameter_hash": "edd6db0b2f98fb46",
+  "hyperparameter_hash": "b796e59afdd1029d",
   "git_commit": "119ef05396ff24f54025e7243954c7b538647fd7",
   "python_version": "3.12.3",
   "package_versions": {
@@ -53,6 +46,6 @@
     "cuda_available": false,
     "torch_status": "NOT_INSTALLED_SANDBOX_CONSTRAINT"
   },
-  "timestamp": "2026-09-06T18:25:48.357450+00:00",
+  "timestamp": "2026-09-06T19:09:38.719540+00:00",
   "confirmation_manifest_hash": null
 }

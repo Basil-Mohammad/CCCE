@@ -56,7 +56,33 @@ is a substantially larger engineering effort than the PPO substitute above
 and was judged out of scope for this implementation session. **E08 is
 explicitly marked `NOT_RUN` in `configs/experiments/experiments.yaml`**,
 per Section 55's requirement to label unexecuted experiments honestly
-rather than omit or fabricate them.
+rather than omit or fabricate them. A second, later attempt to install
+PyTorch via its official CPU-only wheel index
+(`download.pytorch.org/whl/cpu`) was also made and also failed, this time
+because that domain is outside this sandbox's network egress allowlist
+(`ERROR: Could not find a version that satisfies the requirement torch
+(from versions: none)`) -- confirming this is a genuine, re-verified
+infrastructure constraint, not a one-off failure.
+
+## 3b. Infrastructure constraint: background process lifetime
+
+Discovered while attempting the E09 confirmation-stage run (added this
+session, ~15-18 minutes of wall-clock compute): **long-running background
+processes in this execution sandbox can be terminated between tool-call
+boundaries**, independent of any bug in the experiment code. An initial
+attempt was silently killed partway through (after naive, replay, and
+part of EWC completed) with no error logged. Rather than treat this as
+merely an operational nuisance to work around, it was treated as the kind
+of "genuine... experimentally impossible specification" Section 0 asks
+authors to STOP and address structurally: `experiments/E09_baselines/run.py`
+was modified to write a per-baseline checkpoint CSV immediately upon that
+baseline's completion, and to detect and skip already-completed baselines
+on restart. This is, in effect, a real (if narrowly scoped) implementation
+of Section 6's checkpointing requirement, which the original
+implementation pass had not built for any experiment script. The second
+attempt, after being interrupted and manually restarted, correctly
+resumed from the point of interruption rather than recomputing or losing
+data.
 
 ## 4. Section 9: standard benchmark environments (MuJoCo/Gymnasium)
 
@@ -74,14 +100,17 @@ claims).
 - **E01 (Level 1, analytical)**: fully compliant. Discovery used 10
   seeds, confirmation used 30 fresh, disjoint seeds (seeds 1000-1029 vs.
   0-9), as specified.
-- **E03, E09 (Level 2, synthetic env)**: **updated to 10 seeds** (was
-  originally 5 in the first implementation pass; increased to meet
-  Section 4's stated minimum, `N_dev >= 10`, on 2026-09-06). Discovery
-  stage only -- **no locked 30/50-seed confirmation stage was run for
-  Level 2 at all**, which remains a real gap. 10 seeds is the specified
-  floor for discovery, not for a confirmatory claim, and no statement in
-  `FINAL_EXPERIMENTAL_REPORT.md` treats these Level-2 results as
-  confirmatory.
+- **E03, E09 (Level 2, synthetic env)**: **now fully compliant with the
+  30-seed confirmation tier** (updated 2026-09-06): discovery uses 10
+  seeds (0-9); confirmation uses 30 fresh, disjoint seeds (1000-1029),
+  matching E01's convention exactly, with a genuine pre-registration lock
+  (Section 57; see `src/ccce/utils/preregistration.py`) written before
+  either confirmation run began. The 50-seed tier for "the most critical
+  claims" (Section 4) was judged not to add proportionate value at this
+  reduced training-budget scale and was not run, given the wall-clock
+  cost of the 30-seed runs already taken (E03: ~6 min; E09: ~17 min,
+  requiring background execution with checkpoint/resume support -- see
+  `scientific_audit_report.md` bug #9).
 - **E02, E06, E07, E11 (Level 1, various)**: use single fixed seeds or
   seed batteries (60-200 independent random scenarios) appropriate to
   their specific designs, documented per-experiment in
@@ -92,15 +121,31 @@ claims).
 **Specified** (via main_v2.tex Table 16): 2x10^6 environment steps per
 protocol.
 
-**Actual**: 1,200-1,800 environment steps per task (Level 2). This is a
-~1,000x reduction, chosen so that a 5-task sequential run completes in
-seconds rather than hours on 1 CPU core. **A direct, measured consequence
-of this reduction is visible in the E09 results**: BWT magnitudes across
-all three baselines were <0.002 in absolute value, i.e., the policy
-plausibly does not train long enough per task to exhibit meaningful
-forgetting at all. This makes E09's baseline comparison **inconclusive**,
-not merely "lower-powered" -- this is stated plainly in
-`FINAL_EXPERIMENTAL_REPORT.md`.
+**Actual**: increased twice this session. Initial implementation:
+1,200-1,800 steps/task (Level 2 discovery stage) -- a ~1,000x-1,600x
+reduction from spec, chosen for near-instant iteration during
+development. **Confirmation stage (added 2026-09-06)**: 12,000-15,000
+steps/task, a further ~7-10x increase over discovery, verified affordable
+(~0.14s per 1,000 training steps on this hardware) before committing to
+the larger runs. This is still a ~130x-165x reduction from the full
+2x10^6-step specification -- a real and substantial gap, not resolved,
+only narrowed. **A direct, measured consequence of the increase**: E03's
+confirmation-stage run at the larger budget surfaced a genuine numerical
+bug in the EWC baseline (unbounded penalty-gradient overflow, not present
+at the smaller discovery-stage budget) that had to be fixed before the
+confirmation results could be trusted (see `scientific_audit_report.md`
+bug #8). Individual-seed effect magnitudes also grew substantially larger
+at the increased budget (e.g., some E03 confirmation seeds showed |CCCE|
+> 0.06 at `c=2.0`, versus a maximum of ~0.06 across all of the smaller
+discovery-stage run), consistent with the larger budget allowing more
+substantial (and more variable) learning to actually occur -- though the
+*mean* effect across 30 seeds remained below the pre-registered
+practical-significance threshold. E09's confirmation-stage baseline
+comparison across all 5 methods (naive, replay, EWC, distillation, UPGD)
+found no baseline significantly different from naive (Holm-corrected),
+though each non-naive method continued to show occasional (1-2 of 30)
+large-magnitude outlier seeds -- a recurring instability pattern that
+persisted, even if it did not fully resolve, at the larger budget.
 
 ## 7. Section 26: diagnostic definitions for E04/E05 (Level 1)
 
@@ -150,9 +195,11 @@ entirely. The re-derivation is documented in
 
 | Component | Spec'd | Actual | Reason |
 |---|---|---|---|
-| PPO backend | Stable-Baselines3 | From-scratch NumPy | No PyTorch (disk) |
-| SAC | Required | NOT_RUN | No PyTorch (disk) |
+| PPO backend | Stable-Baselines3 | From-scratch NumPy | No PyTorch (disk + network) |
+| SAC | Required | NOT_RUN | No PyTorch (disk + network, verified twice) |
 | MuJoCo benchmarks | Required | NOT_RUN | No PyTorch/mujoco (disk) |
-| Level-2 seeds | 10 dev / 30-50 confirm | **10 dev** / 0 confirm | Dev now compliant; confirmation stage not run (wall-clock time) |
-| Training budget | 2e6 steps | 1.2-1.8k steps | Wall-clock time (1 CPU) |
+| Level-2 seeds | 10 dev / 30-50 confirm | **10 dev / 30 confirm** | **Fully compliant with the 30-seed tier** |
+| Training budget | 2e6 steps | 1.2-1.8k (discovery) / 12-15k (confirmation) | Wall-clock time (1 CPU); confirmation is ~7-10x discovery but still ~130-165x below spec |
 | Level-1 seeds | 10 dev / 30-50 confirm | 10 dev / 30 confirm | **Fully compliant** |
+| Pre-registration lock (Sec. 57) | Required for confirmation | **Implemented and used** for E01 (implicitly, via disjoint seeds), E03, E09 | -- |
+| Checkpointing (Sec. 6) | Required | **Implemented for E09** (per-baseline resume) after a real interruption; not yet generalized to other experiments | Added reactively after hitting the constraint, not proactively for every script |

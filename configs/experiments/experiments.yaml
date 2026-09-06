@@ -37,16 +37,16 @@ experiments:
     environment: level2_synthetic_pointmass
     algorithm: "numpy_ppo (naive for L_T, EWC for L_C)"
     task_sequences: ["T1->T2->T3->T4->[T5 branch]"]
-    seeds: {discovery: [0, 1, 2, 3, 4]}
+    seeds: {discovery: [0..9], confirmation: [1000..1029]}
     interventions: [0.5, 0.75, 1.0, 1.5, 2.0]
     controls: [EWC_lambda_300]
     checkpoints: [T1_end, T2_end, T3_end, T4_end, T5_end_branch_T, T5_end_branch_C]
     metrics: [rc, ccce, bwt, representation_drift, update_magnitude]
-    statistical_test: paired_t_interval
+    statistical_test: paired_t_interval (discovery) / bootstrap_2000 (confirmation)
     confidence_level: 0.95
-    multiple_testing: none_single_comparison
-    output_files: [evaluation.csv, ccce_estimates.csv, baseline_metrics.csv, verdict.json, manifest.json]
-    status: "RUN (discovery only, 10 seeds meeting Section 4 minimum / ~1800 steps per task; NOT the locked 30/50-seed confirmation -- result: pattern_observed=False, but sign now matches hypothesis (strongest CCCE=-0.0069 at c=1.5, below delta=0.03 threshold), see FINAL_EXPERIMENTAL_REPORT.md)"
+    multiple_testing: holm_across_4_intervention_comparisons (confirmation only)
+    output_files: [evaluation.csv, ccce_estimates.csv, baseline_metrics.csv, verdict.json, manifest.json, confirmation_manifest.yaml]
+    status: "RUN, discovery (10 seeds/1800 steps) AND locked confirmation (30 fresh seeds/15000 steps, pre-registered, SHA-256 hash logged). Confirmation result: pattern_observed=False, but CCCE(c=2.0)=-0.0075 with bootstrap 95% CI [-0.0164,-0.0001] EXCLUDING ZERO -- statistically detectable but below the practical-significance threshold delta=0.03; Holm-corrected significance=False. See FINAL_EXPERIMENTAL_REPORT.md."
 
   E04_INCREMENTAL_INFORMATION:
     hypothesis: "M1 = M0 + CCCE outperforms M0 (conventional-diagnostic proxies) at predicting an independently-generated future envelope-violation label, via 5-fold CV AUROC."
@@ -129,20 +129,20 @@ experiments:
     status: "NOT_RUN -- SAC requires PyTorch/Stable-Baselines3, which cannot be installed in this sandbox (disk space exhausted mid-install; see docs/DEVIATIONS.md). A from-scratch NumPy SAC was judged out of scope for this session."
 
   E09_CL_BASELINES:
-    hypothesis: "BWT differs meaningfully across naive/replay/EWC baselines on the T1->T2->T3 sequence."
+    hypothesis: "BWT differs meaningfully across naive/replay/EWC/distillation/UPGD baselines on the T1->T2->T3 sequence; task order (Section 11) does not confound this comparison."
     environment: level2_synthetic_pointmass
-    algorithm: "naive_ppo, replay_ppo, ewc_ppo (numpy)"
-    task_sequences: ["T1->T2->T3"]
-    seeds: [0, 1, 2, 3, 4]
+    algorithm: "naive_ppo, replay_ppo, ewc_ppo, distillation_ppo, upgd_ppo (numpy)"
+    task_sequences: ["T1->T2->T3 (Sequence A, primary)", "T2->T1->T3 (Sequence B, order-confound check, discovery only)"]
+    seeds: {discovery: [0..9], confirmation: [1000..1029]}
     interventions: [n/a]
     controls: [n/a]
     checkpoints: [T1_end, T2_end, T3_end]
     metrics: [bwt]
-    statistical_test: descriptive_mean_std_only
-    confidence_level: n/a
-    multiple_testing: n/a
-    output_files: [diagnostics_by_baseline.csv, summary.json, manifest.json]
-    status: "RUN (10 seeds meeting Section 4 minimum, ~1200 steps/task) -- result: naive is stable near zero; replay and EWC each show exactly 2 of 10 seeds with large (~+-0.08) BWT swings, the other 8 near zero, indicating recurring seed-level training instability at this budget rather than a systematic method difference (documented limitation). Distillation and UPGD baselines are implemented and unit-tested but not included in this specific comparison run due to time constraints."
+    statistical_test: descriptive_mean_std (discovery) / holm_corrected_paired_t_vs_naive (confirmation)
+    confidence_level: n/a (descriptive) / 0.95 (confirmation Holm test)
+    multiple_testing: holm_across_4_non_naive_baselines (confirmation only)
+    output_files: [diagnostics_by_baseline.csv, order_confound_check.csv, summary.json, manifest.json, confirmation_manifest.yaml, _checkpoint_<baseline>.csv]
+    status: "RUN, discovery (10 seeds/3 baselines/1200 steps, PLUS order-confound check finding task order changes which seeds become outliers -- e.g. naive seed 4: BWT=-0.0003 under Sequence A vs +0.0838 under Sequence B) AND locked confirmation (30 fresh seeds/all 5 baselines/12000 steps, pre-registered). Confirmation result: NO baseline differs significantly from naive after Holm correction (replay/EWC/distillation/UPGD all p>0.05 vs naive); all methods including naive show 0-2 of 30 outlier seeds with large (~+-0.08) BWT swings. See FINAL_EXPERIMENTAL_REPORT.md."
 
   E10_ABLATIONS:
     hypothesis: "n/a (methodological sensitivity checks, not a single hypothesis)"
