@@ -49,6 +49,22 @@ experiments:
     status: "RUN, discovery (10 seeds/1800 steps) AND locked confirmation (30 fresh seeds/15000 steps, pre-registered, SHA-256 hash logged). Confirmation result: pattern_observed=False, but CCCE(c=2.0)=-0.0075 with bootstrap 95% CI [-0.0164,-0.0001] EXCLUDING ZERO -- statistically detectable but below the practical-significance threshold delta=0.03; Holm-corrected significance=False. See FINAL_EXPERIMENTAL_REPORT.md."
 
   E03_HIDDEN_VULNERABILITY_SB3:
+    hypothesis: "Same as E03_HIDDEN_VULNERABILITY, re-tested with a real Stable-Baselines3 PPO/EWC backend instead of the NumPy substitute."
+    environment: level2_synthetic_pointmass_gym_wrapped
+    algorithm: "real_stable_baselines3_PPO (naive for L_T, EWC via direct torch-parameter penalty for L_C)"
+    task_sequences: ["T1->T2->T3->T4->[T5 branch]"]
+    seeds: {confirmation: [1000..1029]}
+    interventions: [0.5, 0.75, 1.0, 1.5, 2.0]
+    controls: [EWC_lambda_300_torch_param_penalty]
+    checkpoints: [per_seed_json_checkpoint]
+    metrics: [rc, ccce, bwt, update_magnitude]
+    statistical_test: paired_t_interval (rc) / bootstrap_2000 (ccce)
+    confidence_level: 0.95
+    multiple_testing: holm_across_4_intervention_comparisons
+    output_files: [ccce_estimates.csv, verdict.json, manifest.json, confirmation_manifest.yaml, _checkpoint_seed<N>.json]
+    status: "RUN -- real SB3 backend, 30 fresh seeds (same 1000-1029 as the NumPy confirmation stage), 15000 steps/task, locked pre-registration (SHA-256 6f587d58...). Result: nominal RC=-0.0106, 95% CI [-0.0182,-0.0030] EXCLUDING ZERO (real, statistically detectable retention degradation, though within delta=0.03). CCCE contrast was small and NOT significant at ANY point in the intervention grid (strongest raw effect +0.0061 at c=0.5, wrong sign for the hypothesis). hidden_vulnerability_pattern_observed=False. MATERIALLY DIFFERENT from the NumPy confirmation result (which found a small correctly-signed, CI-excluding-zero effect at c=2.0) -- this divergence is reported as a first-class finding, not smoothed over; see docs/DEVIATIONS.md Section 11. NOTE: real SB3/PyTorch training was found to be NOT bit-reproducible given a fixed seed on this hardware (likely multi-threaded BLAS non-determinism), unlike the NumPy substitute."
+
+  E03_HIDDEN_VULNERABILITY_SB3:
     hypothesis: "Same as E03_HIDDEN_VULNERABILITY, tested with a real Stable-Baselines3 PPO backend instead of the NumPy substitute, at the same 30 seeds and training budget as E03's NumPy confirmation stage."
     environment: level2_synthetic_pointmass_gym_wrapped
     algorithm: "real_stable_baselines3_PPO (naive for L_T, EWC via direct policy-parameter manipulation for L_C)"

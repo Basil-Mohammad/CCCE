@@ -318,7 +318,91 @@ use the NumPy substitute; upgrading E09's full 5-baseline, 30-seed
 confirmation stage to real SB3 was estimated at ~100 minutes of
 additional wall-clock compute and was not undertaken in this session.
 
+## 11. E03 confirmation stage was upgraded to real SB3, revealing a genuine, non-cosmetic discrepancy with the NumPy-substitute result
+
+After Section 10's reversal made PyTorch/SB3 available, the E03
+confirmation stage (30 seeds, 15,000 steps/task) was re-run with a real
+neural-network PPO policy (via Stable-Baselines3) instead of the
+from-scratch NumPy linear-Gaussian substitute, using an EWC penalty
+applied directly to the real policy's torch parameters
+(`src/ccce/learners/sb3_params.py`). Methodology (seeds, budget,
+intervention grid, statistical treatment) is otherwise identical to the
+NumPy confirmation stage, for direct comparability.
+
+**Bug found and fixed before this run completed**: the EWC penalty's
+fixed step-size cap (`max_penalty_norm=5.0`), calibrated for the ~19-
+parameter NumPy linear policy, caused the correction to overshoot past
+the anchor parameters when applied to the real ~9,157-parameter neural
+network (a single short training burst moves the flat parameter vector
+by only ~0.1-0.2 in L2 norm, so a fixed 5.0-norm "corrective" step blows
+straight through the target and lands further away than before
+correction -- verified directly: distance from anchor went from 0.166 to
+4.83 with the unfixed formula). Fixed by capping the penalty step at
+`min(max_penalty_norm, 0.5 * current_distance_to_anchor)`, which prevents
+overshoot at any parameter-space scale. Verified via 5 new unit tests
+(`tests/test_sb3_params.py`) at both small and large parameter-gap
+scales.
+
+**A second, more fundamental finding**: **real SB3/PyTorch training on
+this CPU is not bit-exactly reproducible given a fixed seed**, unlike the
+carefully-engineered NumPy substitute (which passes
+`test_training_is_deterministic_given_same_seed` exactly). This was
+discovered by comparing a standalone single-seed test run against the
+same seed's result inside the full 30-seed run: seed 1000 produced
+RC(nominal) = -0.0214 in one invocation and +0.0277 in another, despite
+identical declared seeds, task sequence, and code. The most likely cause
+is non-deterministic floating-point summation order in multi-threaded
+CPU BLAS operations underlying PyTorch's linear-algebra kernels, a
+widely-documented limitation of deep-learning reproducibility that is
+distinct from (and not fixable by) seeding alone. **This means every
+E08 and E03-SB3 result in this project should be read as "reproducible
+in distribution/methodology, but not bit-exact across re-runs,"** in
+contrast to every NumPy-substitute result, which is bit-exact.
+
+**Infrastructure note**: this run was also killed once between tool-call
+boundaries (the same background-process-lifetime constraint documented
+in Section 3b), after having actually completed all 30 seeds and written
+final output files -- the log capture simply stopped before its last
+`print()` calls were flushed. The per-seed checkpoint/resume logic built
+into this script (mirroring E09's) meant the "resumed" invocation found
+all 30 checkpoints already present and completed instantly, without
+recomputing anything.
+
+**Real result** (`experiments/E03_hidden_vulnerability_sb3/output/`):
+nominal RC = -0.0106, 95% CI [-0.0182, -0.0030] -- **excluding zero**, a
+real, statistically detectable retention degradation from learning T5 at
+all (relative to no update), though still within the pre-registered
+`delta=0.03` magnitude threshold. **The CCCE contrast (naive vs.
+EWC-protected branch) was small and NOT statistically distinguishable
+from zero at every single point in the intervention grid** (all 4
+non-nominal Holm-corrected tests non-significant; the strongest raw
+effect was actually positive, +0.0061 at c=0.5, the wrong sign for the
+hidden-vulnerability hypothesis). `hidden_vulnerability_pattern_observed
+= False`.
+
+**This is a materially different result from the NumPy confirmation
+stage**, which found a small correctly-signed, CI-excluding-zero effect
+at c=2.0 (see Section 10 of the original report). Under real
+neural-network training, no comparable signal was found anywhere in the
+grid. Plausible explanations, none confirmed: (a) the real EWC
+implementation may be more effective at actually protecting the T5-branch
+policy in a genuinely higher-capacity network, reducing the naive/EWC
+contrast; (b) the non-reproducibility documented above means any single
+30-seed run carries more irreducible noise than the exactly-reproducible
+NumPy version, and a re-run could plausibly shift results; (c) the
+real neural network's higher capacity and different optimization
+dynamics may simply produce a qualitatively different pattern of
+cross-task interference than a linear policy can express. **This
+divergence between the NumPy-substitute and real-SB3 results is reported
+as a first-class finding, not smoothed over**: it is direct evidence that
+conclusions from the NumPy substitute used throughout most of this
+project should not be assumed to transfer to a real deep-RL setting
+without independent verification, exactly the kind of check Master
+Prompt V3's overall design philosophy (falsifiability, no result
+fabrication, honest negative results) calls for.
+
 ## Summary table
+
 
 | Component | Spec'd | Actual | Reason |
 |---|---|---|---|
@@ -330,4 +414,4 @@ additional wall-clock compute and was not undertaken in this session.
 | Training budget | 2e6 steps | 1.2-1.8k (discovery) / 12-15k (confirmation) | Wall-clock time (1 CPU); confirmation is ~7-10x discovery but still ~130-165x below spec |
 | Level-1 seeds | 10 dev / 30-50 confirm | 10 dev / 30 confirm | **Fully compliant** |
 | Pre-registration lock (Sec. 57) | Required for confirmation | **Implemented and used** for E01 (implicitly, via disjoint seeds), E03, E09, E08 | -- |
-| Checkpointing (Sec. 6) | Required | **Implemented for E09** (per-baseline resume) after a real interruption; not yet generalized to other experiments | Added reactively after hitting the constraint, not proactively for every script |
+| Checkpointing (Sec. 6) | Required | **Implemented for E09** (per-baseline resume) and **E03-SB3** (per-seed resume, verified working after a real interruption); not yet generalized to the remaining NumPy-based experiments | Added reactively after hitting the constraint, not proactively for every script |
