@@ -1,3 +1,5 @@
+# Author: Basil M. Alzboun
+
 """
 E01_GT_RECOVERY -- Level 1 analytical ground-truth recovery.
 

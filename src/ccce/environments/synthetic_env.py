@@ -1,3 +1,5 @@
+# Author: Basil M. Alzboun
+
 """
 Level 2: synthetic low-dimensional continuous-control environment
 (Master Prompt V3, Section 8; main_v2.tex Section 5.2).

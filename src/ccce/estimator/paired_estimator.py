@@ -1,3 +1,5 @@
+# Author: Basil M. Alzboun
+
 """
 Paired CCCE estimator (Master Prompt V3, Section 22; main_v2.tex Section 4.7).
 

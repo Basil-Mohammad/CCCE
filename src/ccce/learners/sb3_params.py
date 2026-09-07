@@ -1,3 +1,5 @@
+# Author: Basil M. Alzboun
+
 """
 Flat-parameter utilities for Stable-Baselines3 policies (needed to
 implement EWC directly on top of SB3, since SB3 has no built-in

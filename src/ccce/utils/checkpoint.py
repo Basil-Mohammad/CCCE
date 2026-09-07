@@ -1,3 +1,5 @@
+# Author: Basil M. Alzboun
+
 """
 Checkpointing utilities (Master Prompt V3, Section 6).
 

@@ -1,3 +1,5 @@
+# Author: Basil M. Alzboun
+
 """
 E02_IDENTIFICATION -- systematic identification/abstention testing
 (Master Prompt V3, Section 32).

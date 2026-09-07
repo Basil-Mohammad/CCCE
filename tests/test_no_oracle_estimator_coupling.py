@@ -1,3 +1,5 @@
+# Author: Basil M. Alzboun
+
 """
 Architectural test enforcing Reviewer-2 attack #11 (main_v2.tex): the
 oracle must never import the estimator it is meant to validate.

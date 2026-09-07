@@ -1,3 +1,5 @@
+# Author: Basil M. Alzboun
+
 """
 Level 1 ground-truth oracle (Master Prompt V3, Section 23).
 

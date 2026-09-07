@@ -1,3 +1,5 @@
+# Author: Basil M. Alzboun
+
 """
 E10_ABLATIONS -- seed-count sensitivity (Master Prompt V3, Section 51,
 factor 2 of 9). Uses the already-collected E01 discovery (N=10) and

@@ -1,3 +1,5 @@
+# Author: Basil M. Alzboun
+
 """
 E04_INCREMENTAL_INFORMATION and E05_INFORMATION_MATCHED
 (Master Prompt V3, Sections 27-28; main_v2.tex Section 4.4 Circularity Audit).

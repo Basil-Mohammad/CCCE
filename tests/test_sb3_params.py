@@ -1,3 +1,5 @@
+# Author: Basil M. Alzboun
+
 import numpy as np
 import pytest
 from stable_baselines3 import PPO

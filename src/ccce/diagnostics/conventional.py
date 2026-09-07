@@ -1,3 +1,5 @@
+# Author: Basil M. Alzboun
+
 """
 Conventional continual-learning diagnostics (Master Prompt V3, Section 26).
 Definitions are fixed here, before any confirmation-stage experiment is run

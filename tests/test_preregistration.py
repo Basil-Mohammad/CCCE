@@ -1,3 +1,5 @@
+# Author: Basil M. Alzboun
+
 from ccce.utils.preregistration import write_confirmation_manifest, verify_confirmation_manifest
 
 

@@ -1,3 +1,5 @@
+# Author: Basil M. Alzboun
+
 """
 DOCUMENTED DEVIATION from Master Prompt V3 Section 12
 =======================================================

@@ -1,3 +1,5 @@
+# Author: Basil M. Alzboun
+
 """
 E11_NEGATIVE_CONTROLS -- Master Prompt V3 Section 33.
 

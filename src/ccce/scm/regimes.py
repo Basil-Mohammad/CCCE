@@ -1,3 +1,5 @@
+# Author: Basil M. Alzboun
+
 """
 Constructs the analytical-SCM configurations for the required regimes
 (Master Prompt V3, Section 24 and Section 13 of main_v2.tex):

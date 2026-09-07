@@ -1,3 +1,5 @@
+# Author: Basil M. Alzboun
+
 """
 E08_CROSS_ALGORITHM -- Master Prompt V3 Section 13.
 

@@ -1,3 +1,5 @@
+# Author: Basil M. Alzboun
+
 """
 Level 1: Analytical structural causal model (Master Prompt V3, Section 7).
 

@@ -1,3 +1,5 @@
+# Author: Basil M. Alzboun
+
 """
 Pre-registration-like lock mechanism (Master Prompt V3, Section 57).
 

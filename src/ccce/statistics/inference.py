@@ -1,3 +1,5 @@
+# Author: Basil M. Alzboun
+
 """
 Statistical utilities (Master Prompt V3, Sections 36-38; main_v2.tex
 Section 5.10). All confidence intervals are 95% unless stated otherwise.

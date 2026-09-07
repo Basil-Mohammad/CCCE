@@ -1,3 +1,5 @@
+# Author: Basil M. Alzboun
+
 """
 Intervention validity classification (Master Prompt V3, Section 18;
 main_v2.tex Section 3.4).

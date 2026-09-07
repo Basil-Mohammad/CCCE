@@ -1,4 +1,53 @@
-# CCCE: Counterfactual Cross-Competence Effects in Continual RL
+# CCCE / Diagnostic Framework for Continual RL
+
+**Author: Basil M. Alzboun**
+
+> **This branch (`diagnostic-framework-v4`) implements the causal
+> diagnostic framework specified in `main_v4.tex`.** It supersedes the
+> single-instrument CCCE framing of `main.tex`/`main_v2.tex` with a
+> six-level attribution hierarchy (Detection, Characterization,
+> Associational, Interventional, Counterfactual, Abstention), in which the
+> original Cross-Competence Effect instrument is retained as one
+> component (the Level E counterfactual instrument) rather than the
+> central object.
+>
+> Prior CCCE-centric experiments (E01-E11, including the real
+> Stable-Baselines3 runs) are preserved, unmodified, under
+> `experiments/legacy_cce/` -- they remain valid results obtained under
+> the earlier specification and are not retracted; they are simply no
+> longer the primary experimental program on this branch.
+
+## New in this branch: the attribution ground-truth module
+
+`src/ccce/attribution/` implements the framework's most important new
+methodological component: **five synthetic worlds (A-E)** in which the
+true causal factor responsible for a Competence Change Event is fixed by
+design and provably independent of every other diagnostic factor's
+measurement function (not merely uncorrelated in a given sample). This
+enables a genuine test of *attribution correctness*, not just predictive
+accuracy.
+
+```
+src/ccce/attribution/
+├── factors.py              # Independent-latent generative substrate for
+│                            #   Category A (observational) and Category B
+│                            #   (intervenable) diagnostic factors
+├── worlds.py                # Worlds A-E + structural and statistical
+│                            #   (closure-test) non-circularity verification
+├── diagnostic_record.py     # The formal record D_i = (Status, Profile,
+│                            #   Attributions, Counterfactual, Confidence)
+└── honesty_competence.py    # Killer Experiment 2: Honesty and Competence
+                             #   tests, jointly required, with a reference
+                             #   attribution procedure and naive baselines
+```
+
+Run the new tests:
+```bash
+export PYTHONPATH=src
+pytest tests/test_attribution_worlds.py tests/test_diagnostic_record.py tests/test_honesty_competence.py -v
+```
+
+## Legacy documentation (main/main_v2 CCCE specification)
 
 Implementation of the experimental program specified for
 "Counterfactual Cross-Competence Effects in Continual Reinforcement

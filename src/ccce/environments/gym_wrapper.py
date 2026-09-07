@@ -1,3 +1,5 @@
+# Author: Basil M. Alzboun
+
 """
 Gymnasium-compatible wrapper around SyntheticPointMassEnv (Master Prompt
 V3 Section 9's "standard, well-established implementations" requirement

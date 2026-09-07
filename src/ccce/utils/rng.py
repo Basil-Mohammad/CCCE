@@ -1,3 +1,5 @@
+# Author: Basil M. Alzboun
+
 """
 Random-number-stream management.
 

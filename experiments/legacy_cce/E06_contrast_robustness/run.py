@@ -1,3 +1,5 @@
+# Author: Basil M. Alzboun
+
 """
 E06_CONTRAST_ROBUSTNESS -- multiple pre-specified counterfactual controls
 (Master Prompt V3, Section 31).

@@ -1,3 +1,5 @@
+# Author: Basil M. Alzboun
+
 """
 Unit + integration tests for the Level-1 analytical SCM pipeline
 (Master Prompt V3, Sections 35, 43).

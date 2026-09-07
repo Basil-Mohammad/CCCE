@@ -1,3 +1,5 @@
+# Author: Basil M. Alzboun
+
 """
 Operational competence contract K_i = (C_i, Phi_i, E_i) for Level 2
 (Master Prompt V3, Sections 16-17; main_v2.tex Section 4.1).

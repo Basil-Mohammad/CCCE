@@ -1,3 +1,5 @@
+# Author: Basil M. Alzboun
+
 """
 Continual-learning baselines (Master Prompt V3, Section 14).
 

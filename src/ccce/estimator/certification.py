@@ -1,3 +1,5 @@
+# Author: Basil M. Alzboun
+
 """
 Identification / abstention state machine (Master Prompt V3, Section 32;
 main_v2.tex Section 4.8).

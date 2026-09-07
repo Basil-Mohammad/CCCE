@@ -1,3 +1,5 @@
+# Author: Basil M. Alzboun
+
 """
 Run provenance and hardware detection (Master Prompt V3, Sections 3, 53, 54).
 
