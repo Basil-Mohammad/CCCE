@@ -1,0 +1,10 @@
+{
+  "experiment_id": "D05_COUNTERFACTUAL_VALIDATION",
+  "n_samples": 500,
+  "best_category_a_correlation_in_world_e": 0.04755137119442816,
+  "best_category_a_factor": "representation_drift",
+  "cce_probe_correlation_in_world_e": 1.0,
+  "necessity_demonstrated": true,
+  "failure_d_triggered": false,
+  "note": "A CCE-probe correlation of exactly 1.0 at this Level-1 analytical stage is expected and correct, not overfitting: World E's paired outcomes share a single common noise draw (common random numbers), which cancels exactly in the paired difference used as the ground-truth target, leaving a deterministic function of the true cause. See killer_experiments.py docstring for the full explanation."
+}

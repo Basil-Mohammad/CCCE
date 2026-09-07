@@ -1,0 +1,20 @@
+{
+  "experiment_id": "D03_FAILURE_MODES",
+  "procedure": "threshold_attribution_procedure (reference associational-only, Category A)",
+  "n_batches": 100,
+  "batch_size": 40,
+  "honesty_rate": 0.66,
+  "honesty_baseline_always_attribute": 0.0,
+  "honesty_exceeds_baseline": true,
+  "competence_rate": 0.22,
+  "competence_baseline_always_abstain": 0.0,
+  "competence_exceeds_baseline": true,
+  "competence_by_world": {
+    "A": 0.65,
+    "B": 0.01,
+    "C": 0.0
+  },
+  "killer_two_passed": true,
+  "failure_b_triggered": false,
+  "failure_c_triggered": false
+}

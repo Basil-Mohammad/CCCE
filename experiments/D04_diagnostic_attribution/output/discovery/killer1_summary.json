@@ -1,0 +1,27 @@
+{
+  "experiment_id": "D04_DIAGNOSTIC_ATTRIBUTION",
+  "stage": "discovery",
+  "n_per_world": 300,
+  "n_folds": 5,
+  "n_total": 1500,
+  "seed": 2024,
+  "failure_a_margin": 0.02,
+  "m0": {
+    "r2_mean": 0.012177249625051002,
+    "r2_std": 0.012227770752408792,
+    "features": "Category A (observational) only"
+  },
+  "m1": {
+    "r2_mean": 0.031964851468388254,
+    "r2_std": 0.027828687430066338,
+    "features": "Category A + Category B (intervenable) + Level E CCE probe"
+  },
+  "m2": {
+    "r2_mean": 0.010621974947637525,
+    "r2_std": 0.012240467784677647,
+    "features": "Category A + raw (q_t, q_c) [information-matched baseline]"
+  },
+  "incremental_gain_m1_over_m0": 0.019787601843337253,
+  "information_matched_gap_m1_minus_m2": 0.02134287652075073,
+  "failure_a_triggered": true
+}

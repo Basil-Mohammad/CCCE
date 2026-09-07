@@ -292,34 +292,49 @@ def _world_e_outcome(scm: AnalyticalSCM, proto_t: LearningProtocolParams, proto_
     return marginal, q_t, q_c
 
 
-def _world_e_protocols(latents: LatentBundle) -> Tuple[LearningProtocolParams, LearningProtocolParams]:
-    """Builds the (target, control) protocol pair from ONLY the declared
-    cause latent (environmental_causal_factor). This function is the
-    object of World E's non-circularity check: it must reference no
-    latent other than the declared cause.
+def env_factor_to_protocols(env_value: float) -> Tuple[LearningProtocolParams, LearningProtocolParams]:
+    """PUBLIC, world-agnostic construction of the (target, control)
+    protocol pair from a single raw environmental-causal-factor value.
 
-    Design note (corrected): the control protocol's gain is held FIXED
-    at a reference value rather than mirrored as (0.6 - 0.1*env). An
-    earlier version mirrored both gains symmetrically around 0.6, which
-    is mathematically inert: because the target and control directions
-    are exact negatives of one another (`target` vs. `-target`), the
-    quantity that drives the SCM's mean trajectory is proportional to
-    `(eta_T + eta_C)`, and a symmetric +delta/-delta perturbation on the
-    two gains cancels exactly in that sum, making `env` have *zero*
-    effect on the outcome regardless of its value -- a genuine
-    non-circularity failure caught by `closure_test`
-    (`std_cause_varied` came out numerically zero). Holding `gain_c`
-    fixed at the reference value 0.6 and letting only `gain_t` respond to
-    `env` avoids this cancellation while preserving the intended
-    qualitative structure: a target protocol whose aggressiveness depends
-    on the causal factor, contrasted against a stable control reference.
+    Extracted from ``_world_e_protocols`` so that the Level E
+    counterfactual instrument can be applied UNIFORMLY to a sample from
+    ANY world (not only World E) by reading that sample's
+    ``intervenable["environmental_causal_factor"]`` value -- this is
+    exactly what a real Level E procedure would do in practice: it does
+    not know in advance which world (if any) it is looking at, and must
+    compute the same counterfactual probe regardless. For worlds A-D,
+    where the outcome-generating equation never reads this latent, the
+    resulting probe is expected to carry no informative signal (see
+    ``killer_experiments.py``, Killer 3); for World E, it is expected to
+    carry the entire signal.
     """
-    gain_t = float(np.clip(0.6 + 0.15 * latents.environmental_causal_factor, 0.1, 0.95))
-    gain_c = 0.6  # fixed reference, independent of env by design
+    gain_t = float(np.clip(0.6 + 0.15 * env_value, 0.1, 0.95))
+    gain_c = 0.6  # fixed reference, independent of env_value by design
     target = np.array([0.0, 1.0, 0.0, 0.0])
     proto_t = LearningProtocolParams("world_e_T", target=target, gain=gain_t, budget=5.0)
     proto_c = LearningProtocolParams("world_e_C", target=-target, gain=gain_c, budget=5.0)
     return proto_t, proto_c
+
+
+def compute_cce_probe(env_value: float) -> Tuple[float, float, float]:
+    """PUBLIC, world-agnostic Level E counterfactual probe. Returns
+    (marginal, q_t, q_c) exactly as ``_world_e_outcome`` does, computed
+    from a single raw ``env_value`` rather than a full ``LatentBundle``.
+    The caller-facing CCE contrast is ``q_t - q_c``.
+    """
+    scm = _world_e_scm()
+    proto_t, proto_c = env_factor_to_protocols(env_value)
+    return _world_e_outcome(scm, proto_t, proto_c, c_marginal=0.0, c_paired=1.0)
+
+
+def _world_e_protocols(latents: LatentBundle) -> Tuple[LearningProtocolParams, LearningProtocolParams]:
+    """Builds the (target, control) protocol pair from ONLY the declared
+    cause latent (environmental_causal_factor). This function is the
+    object of World E's non-circularity check: it must reference no
+    latent other than the declared cause. Thin wrapper around the public,
+    world-agnostic ``env_factor_to_protocols``.
+    """
+    return env_factor_to_protocols(latents.environmental_causal_factor)
 
 
 def _generate_world_e(rng: np.random.Generator) -> AttributionSample:
@@ -393,9 +408,7 @@ def _scalar_outcome_for_closure(world: AttributionWorld, latents: LatentBundle) 
     """Reduces any world (including E) to a single scalar outcome for the
     closure test, so Worlds A-E can be tested with one uniform procedure."""
     if world.world_id == "E":
-        scm = _world_e_scm()
-        proto_t, proto_c = _world_e_protocols(latents)
-        _, q_t, q_c = _world_e_outcome(scm, proto_t, proto_c, c_marginal=0.0, c_paired=1.0)
+        _, q_t, q_c = compute_cce_probe(latents.environmental_causal_factor)
         return q_t - q_c
     return world.outcome_fn(latents)
 
