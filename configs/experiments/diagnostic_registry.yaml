@@ -28,3 +28,14 @@ experiments:
     n_samples: 500
     output_files: [killer3_summary.json, manifest.json]
     status: "RUN -- result: best Category-A correlation = 0.0476 (representation_drift, consistent with pure noise), CCE probe correlation = 1.0000 (exact, expected at Level 1 due to common-random-number noise cancellation in the paired contrast -- see run.py docstring for the full, non-tautological explanation). KILLER 3 PASSED: NECESSITY DEMONSTRATED."
+
+  D04_DIAGNOSTIC_ATTRIBUTION_INTERVENTIONAL:
+    hypothesis: "Level D: deliberately manipulating task_order (Category B) across pre-registered sequences causally affects final T1 competence, tested via real Stable-Baselines3 PPO training (not the NumPy substitute)."
+    environment: level2_synthetic_pointmass_gym_wrapped
+    algorithm: real_stable_baselines3_PPO
+    conditions: [seq1_T1_first (T1->T2->T3), seq2_T1_second (T2->T1->T3), seq3_T1_last (T3->T2->T1)]
+    seeds: [0..9]
+    steps_per_task: 1200
+    statistical_test: kruskal_wallis_omnibus_plus_holm_corrected_pairwise_welch_ttests
+    output_files: [evaluation.csv, interventional_summary.json, manifest.json, confirmation_manifest.yaml, _checkpoint_<seq>.json]
+    status: "RUN -- real SB3 PPO, 10 seeds x 3 sequences = 30 real training runs, ~7 min wall-clock. Result: omnibus Kruskal-Wallis p=0.2366; NO pairwise contrast Holm-significant (seq1 vs seq2 p=0.716, d=+0.17; seq1 vs seq3 p=0.286, d=-0.51; seq2 vs seq3 p=0.204, d=-0.61). LEVEL D CAUSAL CLAIM NOT SUPPORTED at this training budget for the MEAN of final T1 competence. Honest null result, reported as such -- not adjusted or re-run with different seeds to seek significance. Interesting secondary (non-claimed, non-tested) pattern: per-condition std differs notably (seq1=0.0211, seq2=0.0267, seq3=0.0021), suggestive of an order effect on outcome VARIANCE/consistency rather than its mean; this would require a dedicated variance-equality test (e.g. Levene's test, not yet implemented) to evaluate formally and is noted here as a candidate follow-up, not asserted as a finding."

@@ -1,0 +1,55 @@
+{
+  "experiment_id": "D04_DIAGNOSTIC_ATTRIBUTION_INTERVENTIONAL",
+  "factor_name": "task_order",
+  "omnibus_test": "kruskal_wallis",
+  "omnibus_p_value": 0.23662224259465525,
+  "conditions": {
+    "seq1_T1_first": {
+      "mean": 1.088594143165665,
+      "std": 0.021132005016671215,
+      "n": 10,
+      "sequence": "T1->T2->T3"
+    },
+    "seq2_T1_second": {
+      "mean": 1.0846190337374153,
+      "std": 0.02666573649382618,
+      "n": 10,
+      "sequence": "T2->T1->T3"
+    },
+    "seq3_T1_last": {
+      "mean": 1.0962006885511955,
+      "std": 0.002097646638076269,
+      "n": 10,
+      "sequence": "T3->T2->T1"
+    }
+  },
+  "pairwise_contrasts": [
+    {
+      "condition_a": "seq1_T1_first",
+      "condition_b": "seq2_T1_second",
+      "mean_difference": 0.003975109428249635,
+      "cohens_d": 0.16522679813735103,
+      "p_value_uncorrected": 0.7163196891626089,
+      "holm_significant_at_0_05": false
+    },
+    {
+      "condition_a": "seq1_T1_first",
+      "condition_b": "seq3_T1_last",
+      "mean_difference": -0.0076065453855305165,
+      "cohens_d": -0.506561992663926,
+      "p_value_uncorrected": 0.2860622312148167,
+      "holm_significant_at_0_05": false
+    },
+    {
+      "condition_a": "seq2_T1_second",
+      "condition_b": "seq3_T1_last",
+      "mean_difference": -0.011581654813780151,
+      "cohens_d": -0.612339735986878,
+      "p_value_uncorrected": 0.20372691394190465,
+      "holm_significant_at_0_05": false
+    }
+  ],
+  "any_holm_significant_contrast": false,
+  "level_d_causal_claim_supported": false,
+  "confirmation_manifest_hash": "c8b7a03ca39df14c5da3ed5042e51dc1a1c95a227267b3b6653eaabdd7310182"
+}

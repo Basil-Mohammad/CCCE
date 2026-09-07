@@ -1,0 +1,39 @@
+{
+  "backend": "real_stable_baselines3",
+  "competence_of_interest": "T1",
+  "conditions": {
+    "seq1_T1_first": [
+      "T1",
+      "T2",
+      "T3"
+    ],
+    "seq2_T1_second": [
+      "T2",
+      "T1",
+      "T3"
+    ],
+    "seq3_T1_last": [
+      "T3",
+      "T2",
+      "T1"
+    ]
+  },
+  "experiment_id": "D04_DIAGNOSTIC_ATTRIBUTION_INTERVENTIONAL",
+  "factor": "task_order",
+  "n_eval_episodes": 8,
+  "primary_outcome": "final_T1_competence_by_sequence",
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "statistical_test": "kruskal_wallis_omnibus_plus_holm_corrected_pairwise_ttests",
+  "steps_per_task": 1200
+}
