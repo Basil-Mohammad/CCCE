@@ -53,5 +53,7 @@
   "any_holm_significant_contrast": false,
   "level_d_causal_claim_supported": false,
   "confirmation_manifest_hash": "abc45a512216cf44a62aea3c1c48795cdc632ff11659e876d7e64d7435f4ae9d",
-  "power_note": "Pre-registered at n=40/group, exceeding the ~63-seed requirement's practical margin for the largest observed discovery-stage effect (d=0.612) with reasonable compute cost; exact 80% power at d=0.612 would need ~43/group, so n=40 is close to but slightly below nominal 80% power for that specific contrast, and comfortably powered for anything larger."
+  "power_note": "Pre-registered at n=40/group, exceeding the ~63-seed requirement's practical margin for the largest observed discovery-stage effect (d=0.612) with reasonable compute cost; exact 80% power at d=0.612 would need ~43/group, so n=40 is close to but slightly below nominal 80% power for that specific contrast, and comfortably powered for anything larger.",
+  "levene_variance_test_p_value": 0.5629100955936465,
+  "variance_effect_detected": false
 }

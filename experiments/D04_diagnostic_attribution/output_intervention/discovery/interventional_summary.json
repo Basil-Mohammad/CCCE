@@ -53,5 +53,7 @@
   "any_holm_significant_contrast": false,
   "level_d_causal_claim_supported": false,
   "confirmation_manifest_hash": "c8b7a03ca39df14c5da3ed5042e51dc1a1c95a227267b3b6653eaabdd7310182",
-  "power_note": "Underpowered by design (screening only; see module docstring)."
+  "power_note": "Underpowered by design (screening only; see module docstring).",
+  "levene_variance_test_p_value": 0.45366309685592116,
+  "variance_effect_detected": false
 }

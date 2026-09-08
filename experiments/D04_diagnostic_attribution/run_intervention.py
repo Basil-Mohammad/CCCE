@@ -242,6 +242,8 @@ def run(stage: str, output_dir: Path) -> None:
         ],
         any_holm_significant_contrast=result.any_holm_significant_contrast,
         level_d_causal_claim_supported=result.any_holm_significant_contrast,
+        levene_variance_test_p_value=result.levene_variance_test_p_value,
+        variance_effect_detected=result.variance_effect_detected,
         confirmation_manifest_hash=lock_hash,
         power_note=cfg.n_target_power_note,
     )
