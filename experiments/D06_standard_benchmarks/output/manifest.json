@@ -1,0 +1,56 @@
+{
+  "experiment_id": "D06_STANDARD_BENCHMARKS",
+  "run_id": "D06_STANDARD_BENCHMARKS",
+  "seed": -1,
+  "algorithm": "real_stable_baselines3_PPO",
+  "environment": "HalfCheetah-v5",
+  "task_sequence": "n/a (single-task, evaluated under intervention grid)",
+  "intervention_grid": [
+    0.5,
+    0.75,
+    1.0,
+    1.5,
+    2.0
+  ],
+  "control_protocol": "n/a",
+  "hyperparameters": {
+    "training_steps": 8000,
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9
+    ]
+  },
+  "hyperparameter_hash": "c7ef19f528071e73",
+  "git_commit": "5be65bd26d8b182f0b386b15c6eb23540f82dbb1",
+  "python_version": "3.12.3",
+  "package_versions": {
+    "python": "3.12.3",
+    "numpy": "2.4.4",
+    "scipy": "1.17.1",
+    "pandas": "3.0.2",
+    "matplotlib": "3.10.8",
+    "pytest": "9.1.1",
+    "yaml": "6.0.3",
+    "torch": "2.14.0+cu130",
+    "gymnasium": "1.3.0",
+    "stable_baselines3": "2.9.0",
+    "mujoco": "3.12.0"
+  },
+  "hardware": {
+    "platform": "Linux-6.18.44-fc-v24-x86_64-with-glibc2.39",
+    "cpu_count_logical": 1,
+    "gpu_available": false,
+    "gpu_name": null,
+    "cuda_available": false
+  },
+  "timestamp": "2026-09-08T18:15:29.233029+00:00",
+  "confirmation_manifest_hash": "b50f61fd2d081794852c75731f2a5660bfe96ed9e001c15723e82f743f17ce2b"
+}

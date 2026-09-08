@@ -143,3 +143,47 @@ experiments:
       unoptimized training budget -- exactly the kind of gap between analytical validation and
       empirical reality this framework's multi-level validation hierarchy (main_v4.tex Section
       7.1) is designed to surface rather than hide.
+
+  D06_STANDARD_BENCHMARKS:
+    hypothesis: "Level D interventional diagnosis (gravity_magnitude as a designated environmental causal factor) generalizes to a real, standard MuJoCo benchmark (HalfCheetah-v5), not only the custom synthetic environment used throughout this project."
+    environment: "HalfCheetah-v5 (real MuJoCo physics via Gymnasium)"
+    algorithm: real_stable_baselines3_PPO
+    factor: "gravity_magnitude (env.unwrapped.model.opt.gravity, scaled)"
+    intervention_grid: "[0.5, 0.75, 1.0, 1.5, 2.0] (relative to Earth gravity 9.81 m/s^2)"
+    seeds: [0..9]
+    training_steps: 8000
+    n_eval_episodes: 3
+    statistical_test: kruskal_wallis_omnibus_plus_holm_corrected_pairwise_ttests_plus_levene
+    output_files: [evaluation.csv, d06_summary.json, manifest.json, confirmation_manifest.yaml, _checkpoint_seed<N>.json]
+    status: >
+      RUN -- the FIRST real experiment on a standard MuJoCo benchmark in this project (prior
+      work only smoke-tested reset/step). Real Stable-Baselines3 PPO, 10 seeds, ~5 min wall-clock
+      (slower than the synthetic environment's ~19s/seed estimate due to running concurrently
+      with the D04 high_power background job on this sandbox's single CPU core).
+
+      A single illustrative seed (seed=0) showed a strikingly clean, physically sensible,
+      monotonic dose-response: mean return 68.8 (gravity x0.5) -> 42.1 (x0.75) -> 23.5 (x1.0,
+      nominal) -> -9.7 (x1.5) -> -19.1 (x2.0) -- lower gravity makes locomotion easier (higher
+      reward), higher gravity makes it harder, exactly as physically expected.
+
+      HOWEVER, aggregated across all 10 seeds, this pattern does NOT survive: omnibus
+      Kruskal-Wallis p=0.677, NO pairwise contrast Holm-significant (largest |d|=0.597 for
+      gravity x1.0 vs x2.0, achieved power at n=10 only 24.4%, requiring N=45 for 80% power).
+      Per-condition standard deviations are enormous (68-85) relative to the between-condition
+      mean differences (means ranging from -29 to +14) -- consistent with the small training
+      budget (8000 steps, vs. HalfCheetah's typical 1-3 million-step training regimes) producing
+      highly heterogeneous policy quality across seeds, which swamps the population-level gravity
+      effect that one favorably-trained seed can still exhibit individually. Levene's test also
+      found no significant variance difference across conditions (p=0.699).
+
+      This is the SAME statistical-power lesson this project has now encountered three times
+      (D04's task-order confirmation, D06 here) at discovery scale: a compelling single-seed or
+      single-example pattern does not by itself establish a population-level causal claim.
+      LEVEL D CAUSAL CLAIM: NOT SUPPORTED at this training budget and seed count -- reported
+      honestly, with the specific reason (severe seed-to-seed training-quality heterogeneity at
+      a very small budget for a genuinely hard standard benchmark) identified rather than left
+      unexplained. A properly-powered confirmation stage (N~45+, and/or a substantially larger
+      training budget to reduce policy-quality heterogeneity) is noted as necessary future work,
+      not undertaken in this session due to the additional ~15-20x compute cost implied (45
+      seeds x ~19s x concurrent-load-adjusted overhead) relative to the discovery-stage screening
+      already completed.

@@ -1,0 +1,30 @@
+{
+  "backend": "real_stable_baselines3_mujoco",
+  "environment": "HalfCheetah-v5",
+  "experiment_id": "D06_STANDARD_BENCHMARKS",
+  "factor": "gravity_magnitude",
+  "gravity_scale_grid": [
+    0.5,
+    0.75,
+    1.0,
+    1.5,
+    2.0
+  ],
+  "max_eval_steps": 300,
+  "n_eval_episodes": 3,
+  "primary_outcome": "mean_episode_return_by_gravity_condition",
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "statistical_test": "kruskal_wallis_omnibus_plus_holm_corrected_pairwise_ttests_plus_levene",
+  "training_steps": 8000
+}
