@@ -75,3 +75,53 @@ experiments:
       LEVEL D CAUSAL CLAIM: NOT SUPPORTED at both stages, but the confirmation stage's negative
       result carries far more evidentiary weight than the discovery stage's, precisely because
       it was adequately powered to make that negative result interpretable.
+
+  D05_COUNTERFACTUAL_VALIDATION_REAL_RL:
+    hypothesis: "Level E empirical validation: does the Cross-Competence Effect instrument detect anything real when applied to genuine SB3-trained neural-network policies (not the Level-1 analytical SCM used by the Killer-3 run.py validation)?"
+    environment: level2_synthetic_pointmass_gym_wrapped
+    algorithm: real_stable_baselines3_PPO(+EWC for L_C)
+    history_task: T1
+    target_task: T2
+    competence_of_interest: T1
+    seeds: {discovery: [0..9], confirmation: [1000..1029]}
+    steps_per_task: 1200
+    intervention_grid: [0.5, 0.75, 1.0, 1.5, 2.0]
+    statistical_test: paired_t_interval(discovery)/bootstrap_2000(confirmation)_plus_holm_across_4_intervention_points
+    output_files: [ccce_estimates.csv, level_e_summary.json, manifest.json, confirmation_manifest.yaml, _checkpoint_seed<N>.json]
+    status: >
+      RUN, two-stage, real SB3 PPO+EWC (not the Level-1 analytical SCM, not the NumPy substitute).
+
+      DISCOVERY (n=10): nominal RC=-0.0084, strongest CCE=-0.0052 at c=1.5, CI [-0.0354,+0.0250]
+      (includes zero). No Holm-significant effect.
+
+      CONFIRMATION (n=30 fresh, disjoint seeds 1000-1029): nominal RC=-0.0007 (~0, consistent with
+      the RC~0 precondition), strongest mean CCE=+0.0059 at c=0.5, bootstrap CI [-0.0004,+0.0139]
+      (includes zero, though narrowly). NO Holm-significant effect at any of the 4 non-nominal
+      intervention points. Several individual seeds showed large nominal-condition CCE swings
+      (seeds 1003, 1008, 1017, 1029: +0.06 to +0.07) -- a recurring outlier pattern consistent
+      with this project's earlier E09 finding (roughly 1-in-8 to 1-in-10 seeds showing large
+      swings under EWC at this training budget) -- but these did not translate into a
+      Holm-significant AGGREGATE effect at any intervention point.
+
+      HONEST COMPARISON to this project's earlier E03-SB3 experiment (legacy_cce/, a materially
+      DIFFERENT design: 4-task history T1->T2->T3->T4 branching into T5, at a 10x LARGER
+      training budget of 15,000 steps/task): that experiment found a bootstrap 95% CI EXCLUDING
+      ZERO at c=2.0 (CCE=-0.0075, CI [-0.0164,-0.0001]) -- still below practical-significance
+      threshold delta=0.03, but statistically distinguishable from exactly zero. This experiment
+      (D05, simpler 1-task history, 1200 steps/task) does NOT reproduce even that narrow
+      statistical signal. The most parsimonious explanation, NOT independently verified by a
+      further experiment in this session, is that the shorter history and smaller training
+      budget here leave less room for a genuine EWC-vs-naive divergence to develop before
+      evaluation -- consistent with training budget being a relevant, not yet isolated,
+      moderating factor. This is flagged as an open question for a future ablation (varying
+      steps_per_task and history length as intervenable Category B factors in their own right,
+      per main_v4.tex Table 1), not resolved here.
+
+      LEVEL E VALIDATION VERDICT: no significant effect detected in this specific, simpler real-RL
+      design at either seed count. This does not contradict Killer 3's analytical validation
+      (which used an exact, closed-form world constructed specifically to have a detectable
+      effect); it demonstrates, honestly, that a real neural-network training pipeline does not
+      automatically reproduce an analytically-guaranteed effect at an arbitrarily chosen,
+      unoptimized training budget -- exactly the kind of gap between analytical validation and
+      empirical reality this framework's multi-level validation hierarchy (main_v4.tex Section
+      7.1) is designed to surface rather than hide.

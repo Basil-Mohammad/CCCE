@@ -1,0 +1,25 @@
+{
+  "experiment_id": "D05_COUNTERFACTUAL_VALIDATION_REAL_RL",
+  "stage": "confirmation",
+  "backend": "real_stable_baselines3",
+  "nominal_rc": -0.0007435503104361807,
+  "strongest_intervention_c": 0.5,
+  "strongest_intervention_ccce": 0.005920831163226859,
+  "strongest_intervention_ci": [
+    -0.0004291455756289936,
+    0.0138684380988718
+  ],
+  "any_holm_significant_effect": false,
+  "pattern_meets_delta_threshold": false,
+  "counterfactual_result": {
+    "cross_competence_effect": 0.005920831163226859,
+    "confidence_interval": [
+      -0.0004291455756289936,
+      0.0138684380988718
+    ],
+    "identification_status": "CERTIFIED"
+  },
+  "n_seeds": 30,
+  "training_budget_per_task": 1200,
+  "confirmation_manifest_hash": "ede3a4ee55efaf58b84b766889d2f205a324c56667e325439a0c2bdd8eb7b4ab"
+}
