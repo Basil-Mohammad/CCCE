@@ -1,0 +1,45 @@
+{
+  "experiment_id": "D07_CROSS_ALGORITHM",
+  "run_id": "D07_CROSS_ALGORITHM",
+  "seed": -1,
+  "algorithm": "real_stable_baselines3_SAC",
+  "environment": "level2_synthetic_pointmass_gym_wrapped",
+  "task_sequence": "3 pre-registered sequences over {T1,T2,T3}",
+  "intervention_grid": "n/a",
+  "control_protocol": "task_order (Category B intervenable factor)",
+  "hyperparameters": {
+    "steps_per_task": 1200,
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  "hyperparameter_hash": "32a03c8ba48c38c0",
+  "git_commit": "524b4bbddf3910dcead4a7df7e0529888c734fdd",
+  "python_version": "3.12.3",
+  "package_versions": {
+    "python": "3.12.3",
+    "numpy": "2.4.4",
+    "scipy": "1.17.1",
+    "pandas": "3.0.2",
+    "matplotlib": "3.10.8",
+    "pytest": "9.1.1",
+    "yaml": "6.0.3",
+    "torch": "2.14.0+cu130",
+    "gymnasium": "1.3.0",
+    "stable_baselines3": "2.9.0",
+    "mujoco": "3.12.0"
+  },
+  "hardware": {
+    "platform": "Linux-6.18.44-fc-v24-x86_64-with-glibc2.39",
+    "cpu_count_logical": 1,
+    "gpu_available": false,
+    "gpu_name": null,
+    "cuda_available": false
+  },
+  "timestamp": "2026-09-08T18:50:05.512287+00:00",
+  "confirmation_manifest_hash": "275af65da13989b657588418b9d53984643d9eb9e13203dc1dcc1025ee01bc2c"
+}

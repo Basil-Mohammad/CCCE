@@ -1,0 +1,54 @@
+{
+  "experiment_id": "D07_CROSS_ALGORITHM",
+  "algorithm": "SAC",
+  "factor_name": "task_order",
+  "omnibus_test": "kruskal_wallis",
+  "omnibus_p_value": 0.1466069621303499,
+  "levene_p_value": 0.37060579984167047,
+  "conditions": {
+    "seq1_T1_first": {
+      "mean": 1.063286041147572,
+      "std": 0.030162378207108303,
+      "n": 5
+    },
+    "seq2_T1_second": {
+      "mean": 1.0338706147448362,
+      "std": 0.0019114765989102114,
+      "n": 5
+    },
+    "seq3_T1_last": {
+      "mean": 1.0249892870806965,
+      "std": 0.02871008947772003,
+      "n": 5
+    }
+  },
+  "pairwise_contrasts": [
+    {
+      "condition_a": "seq1_T1_first",
+      "condition_b": "seq2_T1_second",
+      "mean_difference": 0.029415426402735756,
+      "cohens_d": 1.3764302915248385,
+      "p_value_uncorrected": 0.09459076798158525,
+      "holm_significant_at_0_05": false
+    },
+    {
+      "condition_a": "seq1_T1_first",
+      "condition_b": "seq3_T1_last",
+      "mean_difference": 0.038296754066875494,
+      "cohens_d": 1.3006115945344823,
+      "p_value_uncorrected": 0.07385104554247998,
+      "holm_significant_at_0_05": false
+    },
+    {
+      "condition_a": "seq2_T1_second",
+      "condition_b": "seq3_T1_last",
+      "mean_difference": 0.008881327664139738,
+      "cohens_d": 0.43651374376989943,
+      "p_value_uncorrected": 0.5277192873399257,
+      "holm_significant_at_0_05": false
+    }
+  ],
+  "any_holm_significant_contrast": false,
+  "cross_algorithm_agrees_with_ppo": true,
+  "confirmation_manifest_hash": "275af65da13989b657588418b9d53984643d9eb9e13203dc1dcc1025ee01bc2c"
+}

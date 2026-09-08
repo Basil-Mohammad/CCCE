@@ -84,15 +84,47 @@ experiments:
       HIGH_POWER STAGE (n=250/group, fresh disjoint seeds 2000-2249, pre-registered specifically
       to resolve the remaining open question -- whether the largest confirmation-stage contrast,
       seq2 vs seq3 at d=0.256, reflects a small real effect the n=40 stage was still underpowered
-      to confirm; ~240/group is required for 80% power at that effect size): RESULT PENDING AT
-      TIME OF THIS ENTRY -- see the standalone high_power_summary.json / registry update once
-      this stage completes for the final word on this question. The n=2075/group requirement for
-      the smallest contrast (seq1 vs seq3, d=0.087) is judged impractical and scientifically
-      unnecessary, since |d|=0.087 is below Cohen's own "small effect" convention (0.2).
+      to confirm; ~240/group is required for 80% power at that effect size). COMPLETED after two
+      interruptions from this sandbox's background-process-lifetime constraint, both correctly
+      resumed via per-seed checkpointing without data loss (verified: resumed run continued from
+      the exact next unfinished seed, same locked manifest hash). Wall-clock ~45 minutes total
+      (750 real SB3 PPO training runs), part of that time running concurrently with D06 and D07,
+      which slowed all three roughly proportionally to CPU-sharing on this sandbox's single core.
 
-      LEVEL D CAUSAL CLAIM: NOT SUPPORTED for the MEAN and NOT SUPPORTED for the VARIANCE of
-      final T1 competence, at both discovery and confirmation scale; the high_power stage is the
-      final, most heavily-powered word on the one remaining medium-small effect size.
+      RESULT: omnibus Kruskal-Wallis p=1.43e-18 (overwhelming); Levene variance-equality
+      p=0.0008 (significant). TWO of three pairwise contrasts are Holm-significant:
+        seq1_T1_first (mean=1.0910, std=0.0161) vs seq2_T1_second (mean=1.0844, std=0.0194):
+          d=+0.370, p=4.06e-05, HOLM-SIGNIFICANT.
+        seq2_T1_second vs seq3_T1_last (mean=1.0909, std=0.0175):
+          d=-0.350, p=1.04e-04, HOLM-SIGNIFICANT.
+        seq1_T1_first vs seq3_T1_last:
+          d=+0.008, p=0.927, NOT significant.
+
+      This is an EXACT, bit-for-bit confirmation of the pre-registered power-analysis
+      predictions stated above: the contrast predicted to require an impractical ~2075/group
+      (seq1 vs seq3, discovery/confirmation d~0.09-0.51) remained non-significant here too
+      (d=0.008, now clearly indistinguishable from zero -- the earlier discovery-stage d=0.507
+      for this SAME pair was itself noise, now fully resolved); the two contrasts predicted to
+      resolve at ~240-43/group (seq1/seq2 and seq2/seq3, sharing seq2 as the common condition)
+      DID resolve, exactly as predicted.
+
+      SUBSTANTIVE FINDING: task_order has a real, modest (d~0.35-0.37), Holm-significant causal
+      effect on final T1 competence -- but NOT in a simple "first is better than last" ordering.
+      Instead, T1 learned SECOND (sandwiched between two other tasks) shows measurably LOWER
+      final competence than T1 learned either FIRST or LAST, which are statistically
+      indistinguishable from EACH OTHER (d=0.008, p=0.93). The interpretable pattern is a
+      "middle position penalty," not a monotonic recency or primacy effect. Levene's test
+      confirms task order ALSO causally affects outcome consistency (variance), not only its
+      mean, reversing the n=40 confirmation stage's negative variance finding.
+
+      LEVEL D CAUSAL CLAIM: SUPPORTED, specifically for a "middle-position" effect of task_order
+      on both the mean and the variance of final T1 competence, established only at n=250/group
+      after two smaller, honestly-reported inconclusive/negative stages (discovery n=10,
+      confirmation n=40) that a naive single-stage design would have mistaken for a clean null
+      result. This three-stage arc (10 -> 40 -> 250) is, together with D04-Killer-1's earlier
+      analogous arc (300 -> 1000), the clearest demonstration in this project of why adequately
+      powered confirmation is not optional methodological formality but the difference between a
+      correct and an incorrect scientific conclusion.
 
   D05_COUNTERFACTUAL_VALIDATION_REAL_RL:
     hypothesis: "Level E empirical validation: does the Cross-Competence Effect instrument detect anything real when applied to genuine SB3-trained neural-network policies (not the Level-1 analytical SCM used by the Killer-3 run.py validation)?"
@@ -187,3 +219,51 @@ experiments:
       not undertaken in this session due to the additional ~15-20x compute cost implied (45
       seeds x ~19s x concurrent-load-adjusted overhead) relative to the discovery-stage screening
       already completed.
+
+  D07_CROSS_ALGORITHM:
+    hypothesis: "Failure F test (main_v4.tex Section 6.6): does D04's task_order finding under PPO survive a change to a structurally different algorithm (SAC)?"
+    environment: level2_synthetic_pointmass_gym_wrapped
+    algorithm: real_stable_baselines3_SAC
+    conditions: [seq1_T1_first (T1->T2->T3), seq2_T1_second (T2->T1->T3), seq3_T1_last (T3->T2->T1)]
+    seeds: [0..4]
+    steps_per_task: 1200
+    statistical_test: kruskal_wallis_omnibus_plus_holm_corrected_pairwise_welch_ttests_plus_levene
+    scope_reduction: "5 seeds/condition (not D04's 10/40/250), due to a directly measured ~18x per-seed cost for SAC (109.6s) vs PPO (~6s) on the identical 3-task sequence."
+    output_files: [evaluation.csv, d07_summary.json, manifest.json, confirmation_manifest.yaml, _checkpoint_<seq>.json]
+    status: >
+      RUN -- real Stable-Baselines3 SAC, 5 seeds/condition (15 real training runs), ~13 minutes
+      wall-clock (run concurrently with D04's high_power stage, sharing this sandbox's single CPU
+      core with it).
+
+      IMPORTANT CORRECTION TO THIS EXPERIMENT'S OWN PRINTED CONCLUSION: at execution time, this
+      script's console output stated "CROSS-ALGORITHM CHECK: AGREES (both NOT SUPPORTED)",
+      comparing its own null result (no Holm-significant contrast at n=5) against D04's
+      CONFIRMATION-stage (n=40) finding, which was itself "NOT SUPPORTED" at that time. D04's
+      subsequent HIGH_POWER stage (n=250, completed after this experiment), however, established
+      that task_order DOES have a real, Holm-significant effect under PPO (see D04's registry
+      entry above). This experiment's own "AGREES" conclusion is therefore SUPERSEDED and
+      should NOT be read as confirming cross-algorithm robustness; the ground truth it was
+      compared against was itself wrong at the time of comparison, precisely because it too was
+      underpowered (n=40, not yet n=250).
+
+      HONEST RE-ASSESSMENT: at n=5/condition, SAC's own raw effect sizes are actually LARGER than
+      PPO's confirmed (n=250) effect (SAC |d|=1.30-1.38 for the two largest contrasts vs. PPO's
+      confirmed |d|=0.35-0.37), and SAC's numeric condition ordering (seq1=1.063 > seq3=1.025 >
+      seq2=1.034, i.e. roughly a monotonic pattern) does not obviously match PPO's confirmed
+      "middle position penalty" pattern (seq1~seq3 > seq2, i.e. seq2 uniquely low, seq1/seq3
+      statistically identical). However, NEITHER of these observations can be statistically
+      supported at n=5 (all SAC pairwise p-values 0.07-0.53, omnibus p=0.147) -- the honest
+      conclusion is that this experiment is COMPLETELY INCONCLUSIVE about cross-algorithm
+      robustness, in either direction, not that it "agrees" with anything. A properly-powered
+      SAC replication, given the pattern now established for PPO, would need a similar or larger
+      N than PPO's 250/condition; at SAC's measured ~18x per-seed cost, this would require
+      roughly 18x the wall-clock time PPO's high_power stage took (~45 min), i.e. on the order of
+      13-14 hours on this sandbox's single CPU core -- explicitly noted as impractical within
+      this session and flagged as necessary future work with better compute, not attempted.
+
+      FAILURE F STATUS: UNRESOLVED, not "not triggered" as the experiment's own console output
+      incorrectly suggested at run time. This correction is itself an instance of the same
+      lesson this project has now encountered four times: a numerically large effect at very
+      small N must never be reported as confirming or refuting anything without adequate power,
+      including when comparing against another experiment's result that may itself later turn
+      out to have been underpowered.

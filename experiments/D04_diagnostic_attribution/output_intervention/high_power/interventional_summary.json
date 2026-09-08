@@ -1,0 +1,57 @@
+{
+  "experiment_id": "D04_DIAGNOSTIC_ATTRIBUTION_INTERVENTIONAL",
+  "stage": "high_power",
+  "factor_name": "task_order",
+  "omnibus_test": "kruskal_wallis",
+  "omnibus_p_value": 1.4304825482519722e-18,
+  "conditions": {
+    "seq1_T1_first": {
+      "mean": 1.0909897718438402,
+      "std": 0.016122955292756976,
+      "n": 250,
+      "sequence": "T1->T2->T3"
+    },
+    "seq2_T1_second": {
+      "mean": 1.0843884830053547,
+      "std": 0.019365839697070206,
+      "n": 250,
+      "sequence": "T2->T1->T3"
+    },
+    "seq3_T1_last": {
+      "mean": 1.090852223788811,
+      "std": 0.01751449553712155,
+      "n": 250,
+      "sequence": "T3->T2->T1"
+    }
+  },
+  "pairwise_contrasts": [
+    {
+      "condition_a": "seq1_T1_first",
+      "condition_b": "seq2_T1_second",
+      "mean_difference": 0.006601288838485431,
+      "cohens_d": 0.3704775122957337,
+      "p_value_uncorrected": 4.064375954687009e-05,
+      "holm_significant_at_0_05": true
+    },
+    {
+      "condition_a": "seq1_T1_first",
+      "condition_b": "seq3_T1_last",
+      "mean_difference": 0.00013754805502919076,
+      "cohens_d": 0.008171279587813725,
+      "p_value_uncorrected": 0.9272453708898498,
+      "holm_significant_at_0_05": false
+    },
+    {
+      "condition_a": "seq2_T1_second",
+      "condition_b": "seq3_T1_last",
+      "mean_difference": -0.00646374078345624,
+      "cohens_d": -0.35008424339770233,
+      "p_value_uncorrected": 0.00010351806338377114,
+      "holm_significant_at_0_05": true
+    }
+  ],
+  "any_holm_significant_contrast": true,
+  "level_d_causal_claim_supported": true,
+  "confirmation_manifest_hash": "a76b58336d6d3af71429053f86d07a1264b112a6f44bee16a0a7acdae74e9723",
+  "power_note": "Pre-registered at n=250/group specifically to resolve the remaining open question after confirmation: the largest confirmation-stage contrast (seq2 vs seq3, d=0.256) requires ~240/group for 80% power (statsmodels.stats.power.TTestIndPower), so n=250 exceeds that threshold with a small margin. This stage does NOT target the smallest confirmation-stage effect (d=0.087, seq1 vs seq3), which would require ~2075/group -- a sample size judged impractical and unnecessary, since |d|=0.087 falls below Cohen's own 'small effect' convention (0.2) and is therefore of negligible practical import even if eventually confirmed as real."
+}
