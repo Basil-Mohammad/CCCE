@@ -1,0 +1,26 @@
+{
+  "experiment_id": "D03_HIERARCHICAL_COMPARISON",
+  "n_batches": 100,
+  "batch_size": 40,
+  "seed": 2024,
+  "results": {
+    "reference_flat": {
+      "honesty_rate": 0.66,
+      "competence_rate": 0.23666666666666666,
+      "competence_by_world": {
+        "A": 0.7,
+        "B": 0.01,
+        "C": 0.0
+      }
+    },
+    "hierarchical_cascade": {
+      "honesty_rate": 0.68,
+      "competence_rate": 0.5733333333333334,
+      "competence_by_world": {
+        "A": 0.92,
+        "B": 0.01,
+        "C": 0.79
+      }
+    }
+  }
+}
