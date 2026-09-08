@@ -134,3 +134,65 @@ def test_summary_lines_are_human_readable_strings():
     assert isinstance(lines, list)
     assert all(isinstance(line, str) for line in lines)
     assert len(lines) > 0
+
+
+# --------------------------------------------------------------------------
+# Levene's variance-equality test
+# --------------------------------------------------------------------------
+def test_levene_detects_known_variance_difference():
+    """When conditions have clearly different variances (but similar
+    means), Levene's test should reject equal variances even though the
+    Kruskal-Wallis/pairwise mean tests may show no significant
+    difference -- this is the concrete demonstration that a Level D
+    intervention's effect on outcome CONSISTENCY is detected separately
+    from its effect on the mean, motivated directly by the D04 task-order
+    experiment's discovery-stage std pattern (0.021/0.027/0.002)."""
+    rng = np.random.default_rng(20)
+    cond_stable = InterventionCondition(
+        "stable", "low variance", list(rng.normal(1.0, 0.02, size=30))
+    )
+    cond_volatile = InterventionCondition(
+        "volatile", "high variance", list(rng.normal(1.0, 0.30, size=30))
+    )
+    result = run_interventional_diagnosis("test_factor", [cond_stable, cond_volatile])
+
+    assert result.variance_effect_detected, (
+        "Levene's test should detect the large, deliberately constructed "
+        "variance difference between conditions."
+    )
+    # And critically: the MEAN-level test should show little to nothing,
+    # demonstrating these are genuinely separate, non-redundant claims.
+    assert not result.any_holm_significant_contrast
+
+
+def test_levene_does_not_falsely_flag_equal_variance_conditions():
+    """Calibration check: when conditions genuinely have equal variance,
+    Levene's test should not reject in the large majority of trials."""
+    false_positive_count = 0
+    n_trials = 30
+    for trial in range(n_trials):
+        rng = np.random.default_rng(2000 + trial)
+        conditions = [
+            InterventionCondition(cid, "equal variance", list(rng.normal(0.0, 1.0, size=20)))
+            for cid in ("A", "B", "C")
+        ]
+        result = run_interventional_diagnosis("null_variance_factor", conditions)
+        if result.variance_effect_detected:
+            false_positive_count += 1
+    empirical_fpr = false_positive_count / n_trials
+    assert empirical_fpr < 0.20, (
+        f"Empirical Levene false-positive rate {empirical_fpr:.2f} is too high "
+        f"for a true equal-variance scenario."
+    )
+
+
+def test_levene_and_mean_test_are_independently_reported():
+    """Structural check: variance_effect_detected and
+    any_holm_significant_contrast must be independently settable fields,
+    never derived from one another."""
+    rng = np.random.default_rng(21)
+    conditions = [_make_condition(cid, 0.0, 1.0, 15, rng) for cid in ("A", "B")]
+    result = run_interventional_diagnosis("factor", conditions)
+    assert hasattr(result, "levene_variance_test_p_value")
+    assert hasattr(result, "any_holm_significant_contrast")
+    assert isinstance(result.variance_effect_detected, bool)

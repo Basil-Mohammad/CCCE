@@ -106,11 +106,14 @@ class InterventionalDiagnosisResult:
     pairwise_contrasts: List[PairwiseContrast]
     any_holm_significant_contrast: bool
     factor_name_for_causal_claim: str
+    levene_variance_test_statistic: float = 0.0
+    levene_variance_test_p_value: float = 1.0
 
     def summary_lines(self) -> List[str]:
         lines = [
             f"Interventional diagnosis of factor '{self.factor_name}' "
-            f"({self.omnibus_test} omnibus p={self.omnibus_p_value:.4f})"
+            f"({self.omnibus_test} omnibus p={self.omnibus_p_value:.4f}; "
+            f"Levene variance-equality p={self.levene_variance_test_p_value:.4f})"
         ]
         for cond_id, cond in self.conditions.items():
             lines.append(f"  {cond_id}: mean={cond.mean:+.4f} std={cond.std:.4f} n={cond.n_replicates}")
@@ -122,6 +125,15 @@ class InterventionalDiagnosisResult:
                 f"p={c.p_value_uncorrected:.4f} ({sig})"
             )
         return lines
+
+    @property
+    def variance_effect_detected(self) -> bool:
+        """True if Levene's test rejects equal variances across
+        conditions at alpha=0.05 -- i.e., the intervenable factor may
+        affect outcome CONSISTENCY even where it does not affect the
+        mean. This is reported as a SEPARATE claim from
+        `any_holm_significant_contrast`; the two are never conflated."""
+        return self.levene_variance_test_p_value < 0.05
 
 
 def run_interventional_diagnosis(
@@ -173,6 +185,21 @@ def run_interventional_diagnosis(
     # (typically small-sample) per-condition replicate distributions.
     omnibus_stat, omnibus_p = _stats.kruskal(*groups)
 
+    # Variance-equality (Levene's) test, run alongside the MEAN-level
+    # omnibus test. This is a first-class output, not an afterthought:
+    # a Level D intervention can causally affect the OUTCOME VARIANCE
+    # (consistency/stability across seeds) without affecting its mean,
+    # and conflating "no significant mean difference" with "no effect of
+    # any kind" would silently discard exactly that possibility. This was
+    # motivated directly by an observed pattern in this project's D04
+    # task-order experiment, where discovery-stage per-condition standard
+    # deviations differed strikingly (0.021/0.027/0.002) before
+    # converging at a larger, better-powered sample size -- Levene's test
+    # is the correctly-specified way to evaluate whether such a pattern
+    # is statistically real, rather than relying on visual inspection of
+    # raw standard deviations alone.
+    levene_stat, levene_p = _stats.levene(*groups, center="median")
+
     pairwise: List[PairwiseContrast] = []
     raw_p_values: List[float] = []
     pair_ids: List[Tuple[str, str]] = []
@@ -200,4 +227,6 @@ def run_interventional_diagnosis(
         pairwise_contrasts=pairwise,
         any_holm_significant_contrast=any(holm_flags),
         factor_name_for_causal_claim=factor_name,
+        levene_variance_test_statistic=float(levene_stat),
+        levene_variance_test_p_value=float(levene_p),
     )

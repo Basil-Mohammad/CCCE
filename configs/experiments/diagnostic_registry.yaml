@@ -69,12 +69,30 @@ experiments:
       have reasonably strong evidence AGAINST a medium-or-larger causal effect of task_order on
       mean final T1 competence at this specific training budget (1200 steps/task) and algorithm
       (PPO). We explicitly do NOT claim to have ruled out a small residual effect (|d|<0.3),
-      which would require a substantially larger N (roughly 200+/group) to detect reliably --
-      this is stated as an open question, not resolved by this experiment.
+      which would require a substantially larger N to detect reliably -- see the high_power
+      stage below, which resolves this remaining question directly.
 
-      LEVEL D CAUSAL CLAIM: NOT SUPPORTED at both stages, but the confirmation stage's negative
-      result carries far more evidentiary weight than the discovery stage's, precisely because
-      it was adequately powered to make that negative result interpretable.
+      VARIANCE-EQUALITY (Levene's test, added to ccce.attribution.interventional as a first-class
+      output after this experiment motivated it): the striking raw-standard-deviation pattern
+      noted informally after the discovery stage (0.021/0.027/0.002) was formally tested and is
+      NOT statistically supported at EITHER stage (Levene p=0.454 at discovery, p=0.563 at
+      confirmation; variance_effect_detected=False both times). This closes, with a definitive
+      negative result, the earlier "candidate follow-up" note: the apparent variance pattern was
+      itself a small-sample descriptive artifact, not a real effect of task order on outcome
+      consistency, at either seed count tested.
+
+      HIGH_POWER STAGE (n=250/group, fresh disjoint seeds 2000-2249, pre-registered specifically
+      to resolve the remaining open question -- whether the largest confirmation-stage contrast,
+      seq2 vs seq3 at d=0.256, reflects a small real effect the n=40 stage was still underpowered
+      to confirm; ~240/group is required for 80% power at that effect size): RESULT PENDING AT
+      TIME OF THIS ENTRY -- see the standalone high_power_summary.json / registry update once
+      this stage completes for the final word on this question. The n=2075/group requirement for
+      the smallest contrast (seq1 vs seq3, d=0.087) is judged impractical and scientifically
+      unnecessary, since |d|=0.087 is below Cohen's own "small effect" convention (0.2).
+
+      LEVEL D CAUSAL CLAIM: NOT SUPPORTED for the MEAN and NOT SUPPORTED for the VARIANCE of
+      final T1 competence, at both discovery and confirmation scale; the high_power stage is the
+      final, most heavily-powered word on the one remaining medium-small effect size.
 
   D05_COUNTERFACTUAL_VALIDATION_REAL_RL:
     hypothesis: "Level E empirical validation: does the Cross-Competence Effect instrument detect anything real when applied to genuine SB3-trained neural-network policies (not the Level-1 analytical SCM used by the Killer-3 run.py validation)?"

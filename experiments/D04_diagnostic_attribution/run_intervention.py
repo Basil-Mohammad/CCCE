@@ -99,6 +99,19 @@ STAGES: Dict[str, StageConfig] = {
                              "close to but slightly below nominal 80% power for that specific "
                              "contrast, and comfortably powered for anything larger.",
     ),
+    "high_power": StageConfig(
+        seeds=list(range(2000, 2250)),  # 250 FRESH, disjoint from BOTH prior stages
+        n_target_power_note="Pre-registered at n=250/group specifically to resolve the "
+                             "remaining open question after confirmation: the largest "
+                             "confirmation-stage contrast (seq2 vs seq3, d=0.256) requires "
+                             "~240/group for 80% power (statsmodels.stats.power.TTestIndPower), "
+                             "so n=250 exceeds that threshold with a small margin. This stage "
+                             "does NOT target the smallest confirmation-stage effect (d=0.087, "
+                             "seq1 vs seq3), which would require ~2075/group -- a sample size "
+                             "judged impractical and unnecessary, since |d|=0.087 falls below "
+                             "Cohen's own 'small effect' convention (0.2) and is therefore of "
+                             "negligible practical import even if eventually confirmed as real.",
+    ),
 }
 
 
@@ -257,7 +270,7 @@ def run(stage: str, output_dir: Path) -> None:
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument("--stage", choices=["discovery", "confirmation"], default="discovery")
+    parser.add_argument("--stage", choices=["discovery", "confirmation", "high_power"], default="discovery")
     args = parser.parse_args()
     out = Path(__file__).parent / "output_intervention" / args.stage
     run(args.stage, out)
