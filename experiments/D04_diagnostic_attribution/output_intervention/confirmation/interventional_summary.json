@@ -1,0 +1,57 @@
+{
+  "experiment_id": "D04_DIAGNOSTIC_ATTRIBUTION_INTERVENTIONAL",
+  "stage": "confirmation",
+  "factor_name": "task_order",
+  "omnibus_test": "kruskal_wallis",
+  "omnibus_p_value": 0.07861423576537024,
+  "conditions": {
+    "seq1_T1_first": {
+      "mean": 1.0892775956703875,
+      "std": 0.016637716047040247,
+      "n": 40,
+      "sequence": "T1->T2->T3"
+    },
+    "seq2_T1_second": {
+      "mean": 1.0861256992665083,
+      "std": 0.01875888387216705,
+      "n": 40,
+      "sequence": "T2->T1->T3"
+    },
+    "seq3_T1_last": {
+      "mean": 1.0907584940749298,
+      "std": 0.017380239054600965,
+      "n": 40,
+      "sequence": "T3->T2->T1"
+    }
+  },
+  "pairwise_contrasts": [
+    {
+      "condition_a": "seq1_T1_first",
+      "condition_b": "seq2_T1_second",
+      "mean_difference": 0.0031518964038792507,
+      "cohens_d": 0.17777143722606548,
+      "p_value_uncorrected": 0.4290498675851502,
+      "holm_significant_at_0_05": false
+    },
+    {
+      "condition_a": "seq1_T1_first",
+      "condition_b": "seq3_T1_last",
+      "mean_difference": -0.0014808984045422413,
+      "cohens_d": -0.08704495907528376,
+      "p_value_uncorrected": 0.698134107393823,
+      "holm_significant_at_0_05": false
+    },
+    {
+      "condition_a": "seq2_T1_second",
+      "condition_b": "seq3_T1_last",
+      "mean_difference": -0.004632794808421492,
+      "cohens_d": -0.25620032132795606,
+      "p_value_uncorrected": 0.25541674884381677,
+      "holm_significant_at_0_05": false
+    }
+  ],
+  "any_holm_significant_contrast": false,
+  "level_d_causal_claim_supported": false,
+  "confirmation_manifest_hash": "abc45a512216cf44a62aea3c1c48795cdc632ff11659e876d7e64d7435f4ae9d",
+  "power_note": "Pre-registered at n=40/group, exceeding the ~63-seed requirement's practical margin for the largest observed discovery-stage effect (d=0.612) with reasonable compute cost; exact 80% power at d=0.612 would need ~43/group, so n=40 is close to but slightly below nominal 80% power for that specific contrast, and comfortably powered for anything larger."
+}

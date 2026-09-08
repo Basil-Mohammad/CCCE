@@ -1,6 +1,6 @@
 {
   "experiment_id": "D04_DIAGNOSTIC_ATTRIBUTION_INTERVENTIONAL",
-  "run_id": "D04_DIAGNOSTIC_ATTRIBUTION_INTERVENTIONAL",
+  "run_id": "D04_DIAGNOSTIC_ATTRIBUTION_INTERVENTIONAL_discovery",
   "seed": -1,
   "algorithm": "real_stable_baselines3_PPO",
   "environment": "level2_synthetic_pointmass_gym_wrapped",
@@ -23,7 +23,7 @@
     ]
   },
   "hyperparameter_hash": "f2c445b3dbd3ad17",
-  "git_commit": "9f168dee8efa35acb1a1e54d178331d2e2da75eb",
+  "git_commit": "6e20c30a9097f652a3effc766f8faf04c7a84078",
   "python_version": "3.12.3",
   "package_versions": {
     "python": "3.12.3",
@@ -45,6 +45,6 @@
     "gpu_name": null,
     "cuda_available": false
   },
-  "timestamp": "2026-09-07T23:32:11.105418+00:00",
+  "timestamp": "2026-09-08T07:32:31.083720+00:00",
   "confirmation_manifest_hash": "c8b7a03ca39df14c5da3ed5042e51dc1a1c95a227267b3b6653eaabdd7310182"
 }

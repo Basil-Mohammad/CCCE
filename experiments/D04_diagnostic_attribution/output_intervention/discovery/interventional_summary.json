@@ -1,5 +1,6 @@
 {
   "experiment_id": "D04_DIAGNOSTIC_ATTRIBUTION_INTERVENTIONAL",
+  "stage": "discovery",
   "factor_name": "task_order",
   "omnibus_test": "kruskal_wallis",
   "omnibus_p_value": 0.23662224259465525,
@@ -51,5 +52,6 @@
   ],
   "any_holm_significant_contrast": false,
   "level_d_causal_claim_supported": false,
-  "confirmation_manifest_hash": "c8b7a03ca39df14c5da3ed5042e51dc1a1c95a227267b3b6653eaabdd7310182"
+  "confirmation_manifest_hash": "c8b7a03ca39df14c5da3ed5042e51dc1a1c95a227267b3b6653eaabdd7310182",
+  "power_note": "Underpowered by design (screening only; see module docstring)."
 }

@@ -34,8 +34,44 @@ experiments:
     environment: level2_synthetic_pointmass_gym_wrapped
     algorithm: real_stable_baselines3_PPO
     conditions: [seq1_T1_first (T1->T2->T3), seq2_T1_second (T2->T1->T3), seq3_T1_last (T3->T2->T1)]
-    seeds: [0..9]
+    seeds: {discovery: [0..9], confirmation: [1000..1039]}
     steps_per_task: 1200
     statistical_test: kruskal_wallis_omnibus_plus_holm_corrected_pairwise_welch_ttests
+    power_analysis: statsmodels.stats.power.TTestIndPower, retrospective and prospective
     output_files: [evaluation.csv, interventional_summary.json, manifest.json, confirmation_manifest.yaml, _checkpoint_<seq>.json]
-    status: "RUN -- real SB3 PPO, 10 seeds x 3 sequences = 30 real training runs, ~7 min wall-clock. Result: omnibus Kruskal-Wallis p=0.2366; NO pairwise contrast Holm-significant (seq1 vs seq2 p=0.716, d=+0.17; seq1 vs seq3 p=0.286, d=-0.51; seq2 vs seq3 p=0.204, d=-0.61). LEVEL D CAUSAL CLAIM NOT SUPPORTED at this training budget for the MEAN of final T1 competence. Honest null result, reported as such -- not adjusted or re-run with different seeds to seek significance. Interesting secondary (non-claimed, non-tested) pattern: per-condition std differs notably (seq1=0.0211, seq2=0.0267, seq3=0.0021), suggestive of an order effect on outcome VARIANCE/consistency rather than its mean; this would require a dedicated variance-equality test (e.g. Levene's test, not yet implemented) to evaluate formally and is noted here as a candidate follow-up, not asserted as a finding."
+    status: >
+      RUN, two-stage, with a retrospective power analysis motivating the confirmation stage
+      (user-identified concern: "is the discovery-stage null result just due to n=10 being too small?").
+
+      DISCOVERY (n=10/group): omnibus p=0.2366; largest pairwise d=-0.612 (seq2 vs seq3), not
+      Holm-significant. A post-hoc power analysis (statsmodels) showed the achieved power for
+      this effect size at n=10/group was only 25.4% (6.4%-25.4% across the three contrasts) --
+      far below the conventional 80% threshold, and the minimum |d| detectable at n=10 with 80%
+      power is 1.325 (a huge effect). The discovery-stage null was therefore judged
+      UNINTERPRETABLE on its own, not evidence of no effect, exactly paralleling this project's
+      earlier D04-Killer-1 lesson (a borderline discovery result resolving cleanly at higher N)
+      but with a different resolution direction (see below).
+
+      CONFIRMATION (n=40/group, fresh disjoint seeds 1000-1039, ~12 min wall-clock, 120 real SB3
+      PPO training runs, per-seed checkpointing added specifically for this run after the
+      discovery-checkpointing granularity proved insufficient for a crash encountered mid-run):
+      omnibus Kruskal-Wallis p=0.0786; pairwise Cohen's d shrank substantially at every contrast
+      relative to discovery (seq1v2: 0.165->0.178, seq1v3: 0.507->0.087, seq2v3: 0.612->0.256);
+      NO pairwise contrast Holm-significant. The per-condition standard deviations, which had
+      differed strikingly at discovery (0.021, 0.027, 0.002), also converged (0.017, 0.019,
+      0.017) -- indicating BOTH the discovery-stage mean-difference pattern and its
+      variance-difference pattern were predominantly small-sample noise (a form of regression to
+      the mean), not genuine task-order effects.
+
+      UNLIKE the D04-Killer-1 case (where more data REVEALED a real effect), here more data
+      REFUTED an apparent effect. At n=40/group we are well-powered (80%) to detect any effect
+      of |d|>=0.634; since every observed confirmation-stage contrast is now below |d|=0.26, we
+      have reasonably strong evidence AGAINST a medium-or-larger causal effect of task_order on
+      mean final T1 competence at this specific training budget (1200 steps/task) and algorithm
+      (PPO). We explicitly do NOT claim to have ruled out a small residual effect (|d|<0.3),
+      which would require a substantially larger N (roughly 200+/group) to detect reliably --
+      this is stated as an open question, not resolved by this experiment.
+
+      LEVEL D CAUSAL CLAIM: NOT SUPPORTED at both stages, but the confirmation stage's negative
+      result carries far more evidentiary weight than the discovery stage's, precisely because
+      it was adequately powered to make that negative result interpretable.

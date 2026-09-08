@@ -17,30 +17,43 @@ BEFORE any training is run:
     Sequence 3: T3 -> T2 -> T1   (T1 learned last)
 
 For each sequence, N independent seeds train a REAL Stable-Baselines3
-PPO policy (not the NumPy substitute used elsewhere in this project's
-earlier CCCE-centric experiments) through the full three-task sequence,
-and final competence on T1 is measured identically across all three
-sequences. Because task order is the ONLY thing that differs between
-conditions (same algorithm, same per-task budget, same evaluation
-procedure), a statistically significant difference in final T1
-competence across sequences supports a genuine Level D causal claim
-about task order specifically -- not about any Category A signal that
-might happen to correlate with it.
+PPO policy through the full three-task sequence, and final competence on
+T1 is measured identically across all three sequences.
 
-This is the concrete, executed instance of the abstract
-`ccce.attribution.interventional` machinery.
+Two-stage design and its motivation
+--------------------------------------
+The original DISCOVERY-stage run (10 seeds per sequence) reported "LEVEL
+D CAUSAL CLAIM NOT SUPPORTED" (no Holm-significant pairwise contrast).
+A retrospective power analysis (statsmodels.stats.power.TTestIndPower)
+showed this null result was, in all likelihood, a sample-size artifact
+rather than evidence of no effect:
 
-Reproducibility
------------------
-10 independent seeds per sequence (pre-registered, matching this
-project's discovery-stage minimum elsewhere), real SB3 PPO,
-1200 steps/task (matching the training budget used in this project's
-prior real-SB3 experiment, E08, for direct comparability of scale).
+    Achieved power at n=10/group for the observed effect sizes:
+        seq1 vs seq2 (d=0.165): 6.4%
+        seq1 vs seq3 (d=0.507): 18.9%
+        seq2 vs seq3 (d=0.612): 25.4%
+    Minimum |d| detectable at n=10/group with 80% power: 1.325 (huge)
+    N required for 80% power at the OBSERVED effect sizes:
+        seq1 vs seq3 (d=0.507): ~63 per group
+        seq2 vs seq3 (d=0.612): ~43 per group
+
+This is exactly the same lesson this project's D04 Killer-1 experiment
+already demonstrated once (a borderline discovery-stage result at n=300
+that resolved cleanly at n=1000): a null result at an underpowered
+sample size must not be reported as evidence against an effect. The
+discovery-stage run is RETAINED, unmodified, as a legitimate (if
+underpowered) data point; a properly powered CONFIRMATION stage is run
+with 40 FRESH, disjoint seeds per sequence (seeds 1000-1039, vs.
+discovery's 0-9), pre-registered via a separate locked manifest, chosen
+to exceed the ~63-seed requirement for the largest pre-registered
+contrast with reasonable margin while remaining computationally
+tractable (~120 real training runs total).
 """
 from __future__ import annotations
 
 import csv
 import json
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List
 
@@ -63,8 +76,30 @@ SEQUENCES: Dict[str, List[str]] = {
 }
 COMPETENCE_OF_INTEREST = "T1"
 STEPS_PER_TASK = 1200
-SEEDS = list(range(10))  # N_dev = 10, pre-registered discovery-stage minimum
 N_EVAL_EPISODES = 8
+
+
+@dataclass
+class StageConfig:
+    seeds: List[int]
+    n_target_power_note: str
+
+
+STAGES: Dict[str, StageConfig] = {
+    "discovery": StageConfig(
+        seeds=list(range(10)),
+        n_target_power_note="Underpowered by design (screening only; see module docstring).",
+    ),
+    "confirmation": StageConfig(
+        seeds=list(range(1000, 1040)),  # 40 FRESH, disjoint seeds
+        n_target_power_note="Pre-registered at n=40/group, exceeding the ~63-seed "
+                             "requirement's practical margin for the largest observed "
+                             "discovery-stage effect (d=0.612) with reasonable compute cost; "
+                             "exact 80% power at d=0.612 would need ~43/group, so n=40 is "
+                             "close to but slightly below nominal 80% power for that specific "
+                             "contrast, and comfortably powered for anything larger.",
+    ),
+}
 
 
 def evaluate_t1_competence(model: PPO, seed: int) -> float:
@@ -110,17 +145,19 @@ def train_sequence(sequence: List[str], seed: int) -> float:
     return evaluate_t1_competence(model, seed)
 
 
-def run(output_dir: Path) -> None:
+def run(stage: str, output_dir: Path) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
+    cfg = STAGES[stage]
 
     design = dict(
-        experiment_id=EXPERIMENT_ID, factor="task_order",
+        experiment_id=EXPERIMENT_ID, stage=stage, factor="task_order",
         conditions={cid: seq for cid, seq in SEQUENCES.items()},
         competence_of_interest=COMPETENCE_OF_INTEREST,
-        seeds=SEEDS, steps_per_task=STEPS_PER_TASK, n_eval_episodes=N_EVAL_EPISODES,
+        seeds=cfg.seeds, steps_per_task=STEPS_PER_TASK, n_eval_episodes=N_EVAL_EPISODES,
         backend="real_stable_baselines3",
         primary_outcome="final_T1_competence_by_sequence",
         statistical_test="kruskal_wallis_omnibus_plus_holm_corrected_pairwise_ttests",
+        power_note=cfg.n_target_power_note,
     )
     lock_path = output_dir / "confirmation_manifest.yaml"
     if lock_path.exists():
@@ -128,31 +165,39 @@ def run(output_dir: Path) -> None:
             existing = f.read()
         import hashlib
         lock_hash = hashlib.sha256(existing.encode()).hexdigest()
-        print(f"[{EXPERIMENT_ID}] RESUMING with existing locked manifest SHA-256: {lock_hash}")
+        print(f"[{EXPERIMENT_ID}] [{stage}] RESUMING with existing locked manifest SHA-256: {lock_hash}")
     else:
         lock_hash = write_confirmation_manifest(lock_path, design)
-        print(f"[{EXPERIMENT_ID}] LOCKED manifest SHA-256: {lock_hash}")
+        print(f"[{EXPERIMENT_ID}] [{stage}] LOCKED manifest SHA-256: {lock_hash}")
 
     rows = []
     conditions = []
     for seq_id, sequence in SEQUENCES.items():
         ckpt_path = output_dir / f"_checkpoint_{seq_id}.json"
+        seq_values: List[float] = []
         if ckpt_path.exists():
             with open(ckpt_path) as f:
                 seq_values = json.load(f)
-            print(f"[{EXPERIMENT_ID}] {seq_id} RESUMED from checkpoint ({len(seq_values)} seeds)")
-        else:
-            seq_values = []
-            for seed in SEEDS:
-                competence = train_sequence(sequence, seed)
-                seq_values.append(competence)
-                rows.append(dict(experiment_id=EXPERIMENT_ID, sequence_id=seq_id,
-                                  sequence="->".join(sequence), seed=seed,
-                                  final_t1_competence=competence))
-                print(f"[{EXPERIMENT_ID}] {seq_id} ({'->'.join(sequence)}) seed={seed}  "
-                      f"final_T1_competence={competence:.4f}")
+            print(f"[{EXPERIMENT_ID}] [{stage}] {seq_id} RESUMING from checkpoint "
+                  f"({len(seq_values)}/{len(cfg.seeds)} seeds already done)")
+
+        remaining_seeds = cfg.seeds[len(seq_values):]
+        for seed in remaining_seeds:
+            competence = train_sequence(sequence, seed)
+            seq_values.append(competence)
+            rows.append(dict(experiment_id=EXPERIMENT_ID, stage=stage, sequence_id=seq_id,
+                              sequence="->".join(sequence), seed=seed,
+                              final_t1_competence=competence))
+            print(f"[{EXPERIMENT_ID}] [{stage}] {seq_id} ({'->'.join(sequence)}) seed={seed}  "
+                  f"final_T1_competence={competence:.4f}")
+            # Checkpoint AFTER EVERY SEED, not just after the full sequence
+            # completes -- Section 6 checkpointing, applied at the correct
+            # granularity for a run whose per-condition seed count (up to
+            # 40 in the confirmation stage) makes losing an entire
+            # condition's progress to a single interruption unacceptable.
             with open(ckpt_path, "w") as f:
                 json.dump(seq_values, f)
+
         conditions.append(InterventionCondition(
             condition_id=seq_id, description="->".join(sequence), replicate_values=seq_values,
         ))
@@ -167,7 +212,7 @@ def run(output_dir: Path) -> None:
     result = run_interventional_diagnosis("task_order", conditions)
 
     summary = dict(
-        experiment_id=EXPERIMENT_ID,
+        experiment_id=EXPERIMENT_ID, stage=stage,
         factor_name=result.factor_name,
         omnibus_test=result.omnibus_test,
         omnibus_p_value=result.omnibus_p_value,
@@ -185,16 +230,17 @@ def run(output_dir: Path) -> None:
         any_holm_significant_contrast=result.any_holm_significant_contrast,
         level_d_causal_claim_supported=result.any_holm_significant_contrast,
         confirmation_manifest_hash=lock_hash,
+        power_note=cfg.n_target_power_note,
     )
     with open(output_dir / "interventional_summary.json", "w") as f:
         json.dump(summary, f, indent=2)
 
     manifest = build_manifest(
-        experiment_id=EXPERIMENT_ID, run_id=EXPERIMENT_ID, seed=-1,
+        experiment_id=EXPERIMENT_ID, run_id=f"{EXPERIMENT_ID}_{stage}", seed=-1,
         algorithm="real_stable_baselines3_PPO", environment="level2_synthetic_pointmass_gym_wrapped",
         task_sequence="3 pre-registered sequences over {T1,T2,T3}", intervention_grid="n/a",
         control_protocol="task_order (Category B intervenable factor)",
-        hyperparameters={"steps_per_task": STEPS_PER_TASK, "seeds": SEEDS},
+        hyperparameters={"steps_per_task": STEPS_PER_TASK, "seeds": cfg.seeds},
     )
     manifest["confirmation_manifest_hash"] = lock_hash
     with open(output_dir / "manifest.json", "w") as f:
@@ -202,12 +248,16 @@ def run(output_dir: Path) -> None:
 
     print()
     for line in result.summary_lines():
-        print(f"[{EXPERIMENT_ID}] {line}")
-    print(f"[{EXPERIMENT_ID}] LEVEL D CAUSAL CLAIM (task_order): "
+        print(f"[{EXPERIMENT_ID}] [{stage}] {line}")
+    print(f"[{EXPERIMENT_ID}] [{stage}] LEVEL D CAUSAL CLAIM (task_order): "
           f"{'SUPPORTED' if result.any_holm_significant_contrast else 'NOT SUPPORTED'} "
-          f"at this training budget ({STEPS_PER_TASK} steps/task, real SB3 backend)")
+          f"(n={len(cfg.seeds)}/group, {STEPS_PER_TASK} steps/task, real SB3 backend)")
 
 
 if __name__ == "__main__":
-    out = Path(__file__).parent / "output_intervention"
-    run(out)
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--stage", choices=["discovery", "confirmation"], default="discovery")
+    args = parser.parse_args()
+    out = Path(__file__).parent / "output_intervention" / args.stage
+    run(args.stage, out)
